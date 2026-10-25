@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pravin News - Poster Generator v2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wght@700;800&family=Khand:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'Anek Devanagari', sans-serif;
+            background: #0f172a; color: white; margin: 0; padding: 15px;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            overflow-x: hidden;
+        }
+        .main-wrapper {
+            display: flex; flex-direction: row; align-items: flex-start; justify-content: center;
+            gap: 40px; max-width: 1400px; width: 100%; padding: 10px;
+        }
+
+        /* पोस्टर का दिखने वाला डिब्बा - 1080x1350 */
+        .canvas-wrap { flex-shrink: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        #canvasInner { width: 1080px; height: 1350px; transform-origin: top left; }
+
+        #newsCanvas {
+            width: 1080px; height: 1350px; background: #000; position: relative; overflow: hidden;
+            text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;
+        }
+        #photoCanvas { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; z-index: 1; display: block; }
+
+        .overlay-layer { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; z-index: 3; pointer-events: none; }
+        #frameImg { width: 1080px; height: 1350px; display: block; }
+
+        .text-layer { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; z-index: 4; pointer-events: none; }
+
+        .headline-container { position: absolute; top: 0; left: 0; width: 1080px; height: 152px; display: table; padding: 0 50px; }
+        .headline-cell { display: table-cell; vertical-align: middle; text-align: center; }
+        #headlineText {
+            font-family: 'Khand', sans-serif; font-size: 95px; font-weight: 700; color: #ffffff;
+            margin: 0; line-height: 1.1; letter-spacing: 0px;
+            text-shadow: 0px 4px 12px rgba(0,0,0,0.95), 0px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .news-date-badge {
+            position: absolute; top: 155px; right: 40px; background: rgba(0,0,0,0.75);
+            padding: 4px 15px 6px 15px; border-radius: 4px; border-left: 4px solid #FFD600;
+        }
+        #liveDateText {
+            font-family: 'Anek Devanagari', sans-serif; font-size: 24px; font-weight: 700;
+            color: #ffffff; margin: 0; letter-spacing: 0.5px; line-height: 1;
+        }
+
+        .txt-yellow { color: #FFD600 !important; }
+        .txt-red { color: #c70100 !important; font-weight: 800; }
+
+        .body-text-container { position: absolute; top: 1090px; left: 0; width: 1080px; height: 205px; display: table; padding: 0 60px; }
+        .body-text-cell { display: table-cell; vertical-align: middle; text-align: center; }
+        #storyContent {
+            font-family: 'Anek Devanagari', sans-serif; font-size: 55.88px; font-weight: 700;
+            line-height: 1.25; color: #000000; margin: 0; letter-spacing: 0px; word-wrap: break-word;
+        }
+
+        /* एडिटर पैनल */
+        .editor-ui {
+            background: #1e293b; padding: 18px; border-radius: 12px; width: 100%; max-width: 480px;
+            border: 1px solid #334155; flex-shrink: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .section-box { background: #0f172a; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
+        label { font-size: 13px; color: #FFD600; display: block; margin-bottom: 6px; font-weight: bold; }
+        .sub-label { color: #94a3b8; font-size: 11px; }
+        input[type="text"], input[type="date"], textarea, input[type="file"], button {
+            width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 6px;
+            border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 14px;
+            font-family: inherit;
+        }
+        input[type="range"] { width: 100%; margin-bottom: 8px; }
+        button { background: #22c55e; border: none; font-weight: bold; cursor: pointer; font-size: 15px; color: #000; transition: 0.2s; }
+        button:hover { background: #16a34a; }
+        .btn-blue { background: #3b82f6; color: #fff; }
+        .btn-blue:hover { background: #2563eb; }
+        .save-btn { background: #ffffff; color: #000; margin-top: 5px; margin-bottom: 0; padding: 12px; font-size: 16px; }
+        .save-btn:hover { background: #e2e8f0; }
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+
+        @media (max-width: 800px) {
+            body { align-items: flex-start; padding: 10px; }
+            .main-wrapper { flex-direction: column; align-items: center; gap: 10px; padding: 0; }
+            .editor-ui { max-width: 94vw; padding: 12px; }
+            .section-box { margin-bottom: 8px; padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="canvas-wrap" id="canvasWrap">
+        <div id="canvasInner">
+            <div id="newsCanvas">
+                <canvas id="photoCanvas" width="1080" height="1350"></canvas>
+
+                <div class="overlay-layer">
+                    <img id="frameImg" alt="Pravin News Overlay Master" crossorigin="anonymous"
+                         src="frame.png"
+                         onerror="this.onerror=null; this.src='https://i.postimg.cc/GmkN6q4B/New-Project-(2).png';">
+                </div>
+
+                <div class="text-layer">
+                    <div class="headline-container">
+                        <div class="headline-cell"><h1 id="headlineText"></h1></div>
+                    </div>
+                    <div class="news-date-badge"><p id="liveDateText"></p></div>
+                    <div class="body-text-container">
+                        <div class="body-text-cell"><p id="storyContent"></p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="editor-ui">
+        <div class="section-box">
+            <label>1. मुख्य हेडलाइन (ऊपर):</label>
+            <input type="text" id="headInp" placeholder="अपनी मुख्य हेडलाइन यहाँ टाइप करें..." oninput="render()">
+            <label class="sub-label">हेडिंग का अधिकतम साइज (लंबी हो तो अपने आप छोटी होगी)</label>
+            <input type="range" id="headSizeSlider" min="50" max="110" value="95" oninput="render()">
+        </div>
+
+        <div class="section-box">
+            <label>2. न्यूज़ फोटो अपलोड और अलाइनमेंट:</label>
+            <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload()">
+            <div class="row">
+                <div><label class="sub-label">ज़ूम</label><input type="range" id="sizeZoom" min="400" max="2800" value="1080" oninput="drawPhoto()"></div>
+                <div><label class="sub-label">ऊपर/नीचे</label><input type="range" id="moveY" min="-800" max="800" value="0" oninput="drawPhoto()"></div>
+                <div><label class="sub-label">दाएँ/बाएँ</label><input type="range" id="moveX" min="-800" max="800" value="0" oninput="drawPhoto()"></div>
+            </div>
+        </div>
+
+        <div class="section-box">
+            <label>3. मुख्य समाचार विवरण (नीचे, पोस्टर पर):</label>
+            <textarea id="bodyInp" rows="4" placeholder="पोस्टर के नीचे की खबर यहाँ लिखें..." oninput="render()"></textarea>
+        </div>
+
+        <div class="section-box">
+            <label>4. खबर की तारीख (बैज पर):</label>
+            <input type="date" id="dateInp" oninput="render()">
+        </div>
+
+        <button class="btn-blue" onclick="reshuffleColors()">रंग बदलें ↻</button>
+        <button class="save-btn" id="saveBtn" onclick="downloadFinalPoster()">पोस्टर डाउनलोड करें (PNG)</button>
+    </div>
+</div>
+
+<script>
+    const W = 1080, H = 1350;
+    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    let photo = null;
+    let colorSeed = 1;
+
+    // हिंदी के सामान्य स्टॉप-वर्ड्स (जो संज्ञा नहीं हैं - कारक, क्रिया, सर्वनाम, अव्यय आदि)
+    const HINDI_STOP_WORDS = new Set([
+        "के", "का", "की", "को", "में", "से", "पर", "ने", "और", "तथा", "या", "भी", "ही", "तो",
+        "है", "हैं", "था", "थी", "थे", "होगी", "होगा", "होंगे", "रहा", "रही", "रहे", "हुआ", "हुई", "हुए",
+        "किया", "किए", "की", "गया", "गई", "गए", "जाएगा", "आया", "आई", "आए", "दिया", "दिए", "लिया", "लिए",
+        "यह", "वह", "इस", "उस", "इन", "उन", "अपने", "अपनी", "अपना", "जो", "जिस", "जिन", "कि", "ताकि",
+        "नहीं", "मत", "ना", "क्या", "कहाँ", "कब", "कैसे", "क्यों", "वाला", "वाली", "वाले", "हुए", "कर", "होने"
+    ]);
+
+    function el(id) { return document.getElementById(id); }
+
+    function rng(seed) {
+        let a = seed >>> 0;
+        return function () {
+            a = (a + 0x6D2B79F5) | 0;
+            let t = Math.imul(a ^ (a >>> 15), 1 | a);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+    }
+
+    function cleanWord(w) {
+        return w.replace(/[^\u0900-\u0963\u0966-\u097FA-Za-z0-9]/g, '');
+    }
+
+    // तारीख को आज की तारीख पर सेट करना
+    function resetToToday() {
+        const d = el('dateInp');
+        const t = new Date();
+        const mm = String(t.getMonth() + 1).padStart(2, '0');
+        const dd = String(t.getDate()).padStart(2, '0');
+        d.value = `${t.getFullYear()}-${mm}-${dd}`;
+    }
+
+    function fmtDate(v) {
+        if (!v) return '';
+        const p = v.split('-');
+        if (p.length !== 3) return '';
+        return `${parseInt(p[2], 10)} ${MONTHS[parseInt(p[1], 10) - 1]} ${p[0]}`;
+    }
+
+    /* ---------- कैनवास फोटो रेंडरर ---------- */
+    const pc = el('photoCanvas');
+    const pctx = pc.getContext('2d');
+
+    function blurredBackground(img) {
+        const s = Math.max(W / img.width, H / img.height);
+        const bw = img.width * s, bh = img.height * s;
+        const prev = document.createElement('canvas');
+        prev.width = Math.round(W / 24); prev.height = Math.round(H / 24);
+        const pctx2 = prev.getContext('2d');
+        pctx2.imageSmoothingQuality = 'high';
+        pctx2.drawImage(img, (prev.width - bw / 24) / 2, (prev.height - bh / 24) / 2, bw / 24, bh / 24);
+        const mid = document.createElement('canvas');
+        mid.width = Math.round(W / 6); mid.height = Math.round(H / 6);
+        const mctx = mid.getContext('2d');
+        mctx.imageSmoothingQuality = 'high';
+        mctx.drawImage(prev, 0, 0, mid.width, mid.height);
+        return mid;
+    }
+
+    function drawPhoto() {
+        pctx.globalCompositeOperation = 'source-over';
+        pctx.clearRect(0, 0, W, H);
+        pctx.fillStyle = '#1e293b';
+        pctx.fillRect(0, 0, W, H);
+
+        if (!photo) {
+            pctx.fillStyle = '#94a3b8';
+            pctx.font = '700 60px "Anek Devanagari", sans-serif';
+            pctx.textAlign = 'center';
+            pctx.fillText('न्यूज़ फ़ोटो चुनें', W / 2, H * 0.45);
+            return;
+        }
+
+        pctx.imageSmoothingEnabled = true;
+        pctx.imageSmoothingQuality = 'high';
+        pctx.drawImage(blurredBackground(photo), 0, 0, W, H);
+        pctx.fillStyle = 'rgba(0,0,0,0.45)';
+        pctx.fillRect(0, 0, W, H);
+
+        const zoom = parseFloat(el('sizeZoom').value);
+        const iw = zoom, ih = photo.height * zoom / photo.width;
+        const cx = W / 2 + parseFloat(el('moveX').value);
+        const cy = H * 0.45 + parseFloat(el('moveY').value);
+        if ('filter' in pctx) pctx.filter = 'contrast(1.08) brightness(1.03) saturate(1.06)';
+        pctx.drawImage(photo, cx - iw / 2, cy - ih / 2, iw, ih);
+        pctx.filter = 'none';
+
+        const g = pctx.createLinearGradient(0, H, 0, 0);
+        g.addColorStop(0, 'rgba(0,0,0,0.35)');
+        g.addColorStop(0.5, 'rgba(0,0,0,0)');
+        g.addColorStop(1, 'rgba(0,0,0,0.2)');
+        pctx.globalCompositeOperation = 'multiply';
+        pctx.fillStyle = g;
+        pctx.fillRect(0, 0, W, H);
+        pctx.globalCompositeOperation = 'source-over';
+    }
+
+    function handleImageUpload() {
+        const file = el('imageLoader').files[0];
+        if (!file) return;
+        const img = new Image();
+        img.onload = function () {
+            photo = img;
+            el('sizeZoom').value = 1080;
+            el('moveX').value = 0;
+            el('moveY').value = 0;
+            drawPhoto();
+        };
+        img.onerror = function () { alert('यह फ़ोटो खुल नहीं पाई, कोई और फ़ोटो चुनें।'); };
+        img.src = URL.createObjectURL(file);
+    }
+
+    /* ---------- स्मार्ट संज्ञा चयन लॉजिक (अधिकतम 2-3 शब्द) ---------- */
+    function pickNounIndices(wordsList, maxHighlights = 2, seedModifier = 1) {
+        const candidates = [];
+        wordsList.forEach((w, idx) => {
+            const clean = cleanWord(w);
+            // 2 अक्षर से बड़े शब्द और जो स्टॉप-वर्ड्स न हों (संभावित संज्ञा/स्थान/नाम)
+            if (clean.length >= 2 && !HINDI_STOP_WORDS.has(clean)) {
+                candidates.push({ idx, len: clean.length });
+            }
+        });
+
+        if (candidates.length === 0) return new Set();
+
+        // प्राथमिकता: लंबे और महत्वपूर्ण नाम
+        candidates.sort((a, b) => b.len - a.len);
+
+        const r = rng(colorSeed * seedModifier + 47);
+        const selected = new Set();
+        const pool = candidates.slice(0, Math.min(6, candidates.length));
+
+        // 2 से 3 शब्द चुनना (जो एक-दूसरे से सटे हुए न हों)
+        for (let i = 0; i < pool.length && selected.size < maxHighlights; i++) {
+            const randIdx = Math.floor(r() * pool.length);
+            const chosen = pool[randIdx].idx;
+            
+            // चेक करें कि यह चुने हुए पहले किसी शब्द के ठीक अगल-बगल न हो
+            let isAdjacent = false;
+            for (let s of selected) {
+                if (Math.abs(s - chosen) <= 1) { isAdjacent = true; break; }
+            }
+            if (!isAdjacent) {
+                selected.add(chosen);
+            }
+        }
+
+        // यदि पास-पास होने के नियम से कम रह गए तो टॉप वाले को जोड़ें
+        if (selected.size === 0 && pool.length > 0) {
+            selected.add(pool[0].idx);
+        }
+
+        return selected;
+    }
+
+    function appendPlain(parent, text) { parent.appendChild(document.createTextNode(text)); }
+    function appendSpan(parent, text, cls) {
+        const s = document.createElement('span');
+        s.className = cls; s.textContent = text; parent.appendChild(s);
+    }
+
+    function renderHeadline() {
+        const h = el('headlineText');
+        h.textContent = '';
+        const words = el('headInp').value.trim().split(/\s+/).filter(w => w.length > 0);
+        if (!words.length) return;
+
+        // हेडलाइन में अधिकतम 2 प्रमुख संज्ञा शब्द पीले होंगे
+        const yellowIndices = pickNounIndices(words, 2, 7919);
+
+        words.forEach((w, i) => {
+            if (i > 0) appendPlain(h, ' ');
+            if (yellowIndices.has(i)) appendSpan(h, w, 'txt-yellow'); 
+            else appendPlain(h, w);
+        });
+
+        let size = parseInt(el('headSizeSlider').value, 10);
+        h.style.fontSize = size + 'px';
+        while (h.offsetHeight > 148 && size > 40) { 
+            size -= 2; 
+            h.style.fontSize = size + 'px'; 
+        }
+    }
+
+    function renderBody() {
+        const p = el('storyContent');
+        p.textContent = '';
+        const text = el('bodyInp').value.trim();
+        if (!text) return;
+
+        const tokens = text.split(/(\s+)/);
+        const wordsOnly = [];
+        const wordIndices = [];
+        
+        tokens.forEach((t, i) => {
+            if (t.trim().length) {
+                wordsOnly.push(t);
+                wordIndices.push(i);
+            }
+        });
+
+        // बॉडी टेक्स्ट में अधिकतम 2 से 3 संज्ञा शब्द लाल होंगे
+        const maxRed = wordsOnly.length > 15 ? 3 : 2;
+        const selectedNouns = pickNounIndices(wordsOnly, maxRed, 104729);
+        const redTokenIndices = new Set();
+        selectedNouns.forEach(wIdx => redTokenIndices.add(wordIndices[wIdx]));
+
+        tokens.forEach((t, i) => {
+            if (!t.length) return;
+            if (!t.trim().length) { appendPlain(p, t); return; }
+            if (redTokenIndices.has(i)) appendSpan(p, t, 'txt-red'); 
+            else appendPlain(p, t);
+        });
+
+        let size = 55.88;
+        p.style.fontSize = size + 'px';
+        while (p.offsetHeight > 200 && size > 34) { 
+            size -= 2; 
+            p.style.fontSize = size + 'px'; 
+        }
+    }
+
+    function render() {
+        if (!el('dateInp').value) resetToToday();
+        el('liveDateText').textContent = fmtDate(el('dateInp').value);
+        renderHeadline();
+        renderBody();
+    }
+
+    function reshuffleColors() { 
+        colorSeed += 1; 
+        render(); 
+    }
+
+    function resizeCanvasView() {
+        const wrap = el('canvasWrap'), inner = el('canvasInner');
+        let target;
+        if (window.innerWidth <= 800) target = Math.min(window.innerWidth - 24, 520);
+        else target = 520;
+        const scale = target / W;
+        inner.style.transform = `scale(${scale})`;
+        wrap.style.width = Math.round(W * scale) + 'px';
+        wrap.style.height = Math.round(H * scale) + 'px';
+    }
+
+    /* ---------- डाउनलोड और ऑटो डेट रीसेट ---------- */
+    async function downloadFinalPoster() {
+        const btn = el('saveBtn');
+        const wrap = el('canvasWrap'), inner = el('canvasInner');
+        const old = btn.textContent;
+        btn.textContent = 'तैयार हो रहा है...';
+        try {
+            await document.fonts.ready;
+            render();
+
+            inner.style.transform = 'none';
+            wrap.style.width = W + 'px'; wrap.style.height = H + 'px';
+            await new Promise(r => setTimeout(r, 150));
+
+            const canvas = await html2canvas(el('newsCanvas'), {
+                scale: 1, useCORS: true, logging: false, allowTaint: false, width: W, height: H
+            });
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+            const t = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const name = `NewsPoster_${t.getFullYear()}${pad(t.getMonth() + 1)}${pad(t.getDate())}_${pad(t.getHours())}${pad(t.getMinutes())}.png`;
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+            // डाउनलोड होते ही डेट को वर्तमान (आज की) तारीख पर रीसेट करें
+            resetToToday();
+            render();
+
+        } catch (err) {
+            console.error(err);
+            alert('पोस्टर सेव नहीं हो पाया। कृपया दोबारा प्रयास करें।');
+        } finally {
+            resizeCanvasView();
+            btn.textContent = old;
+        }
+    }
+
+    window.onload = function () {
+        resetToToday();
+        drawPhoto();
+        resizeCanvasView();
+        const ready = document.fonts && document.fonts.load
+            ? Promise.all([document.fonts.load('700 95px Khand'), document.fonts.load('700 55px "Anek Devanagari"')])
+            : Promise.resolve();
+        ready.catch(() => {}).then(() => { render(); drawPhoto(); });
+    };
+    window.onresize = resizeCanvasView;
+</script>
+</body>
+</html>
