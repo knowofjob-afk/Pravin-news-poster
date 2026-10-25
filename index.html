@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pravin News - Poster Generator v2</title>
+    <title>Pravin News - Poster Generator</title>
+
+    <!-- ऐप की तरह चलाने (PWA/Standalone) के लिए जरूरी टैग्स -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
     <link href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wght@700;800&family=Khand:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -20,7 +27,7 @@
             gap: 40px; max-width: 1400px; width: 100%; padding: 10px;
         }
 
-        /* पोस्टर का दिखने वाला डिब्बा - 1080x1350 */
+        /* पोस्टर का डिब्बा - 1080x1350 */
         .canvas-wrap { flex-shrink: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         #canvasInner { width: 1080px; height: 1350px; transform-origin: top left; }
 
@@ -159,13 +166,13 @@
     let photo = null;
     let colorSeed = 1;
 
-    // हिंदी के सामान्य स्टॉप-वर्ड्स (जो संज्ञा नहीं हैं - कारक, क्रिया, सर्वनाम, अव्यय आदि)
+    // हिंदी स्टॉप-वर्ड्स (क्रिया, सर्वनाम, कारक, अव्यय - जिन्हें कलर नहीं करना है)
     const HINDI_STOP_WORDS = new Set([
         "के", "का", "की", "को", "में", "से", "पर", "ने", "और", "तथा", "या", "भी", "ही", "तो",
         "है", "हैं", "था", "थी", "थे", "होगी", "होगा", "होंगे", "रहा", "रही", "रहे", "हुआ", "हुई", "हुए",
-        "किया", "किए", "की", "गया", "गई", "गए", "जाएगा", "आया", "आई", "आए", "दिया", "दिए", "लिया", "लिए",
+        "किया", "किए", "गया", "गई", "गए", "जाएगा", "आया", "आई", "आए", "दिया", "दिए", "लिया", "लिए",
         "यह", "वह", "इस", "उस", "इन", "उन", "अपने", "अपनी", "अपना", "जो", "जिस", "जिन", "कि", "ताकि",
-        "नहीं", "मत", "ना", "क्या", "कहाँ", "कब", "कैसे", "क्यों", "वाला", "वाली", "वाले", "हुए", "कर", "होने"
+        "नहीं", "मत", "ना", "क्या", "कहाँ", "कब", "कैसे", "क्यों", "वाला", "वाली", "वाले", "कर", "होने"
     ]);
 
     function el(id) { return document.getElementById(id); }
@@ -273,12 +280,11 @@
         img.src = URL.createObjectURL(file);
     }
 
-    /* ---------- स्मार्ट संज्ञा चयन लॉजिक (अधिकतम 2-3 शब्द) ---------- */
+    /* ---------- स्मार्ट संज्ञा चयन (अधिकतम 2-3 शब्द) ---------- */
     function pickNounIndices(wordsList, maxHighlights = 2, seedModifier = 1) {
         const candidates = [];
         wordsList.forEach((w, idx) => {
             const clean = cleanWord(w);
-            // 2 अक्षर से बड़े शब्द और जो स्टॉप-वर्ड्स न हों (संभावित संज्ञा/स्थान/नाम)
             if (clean.length >= 2 && !HINDI_STOP_WORDS.has(clean)) {
                 candidates.push({ idx, len: clean.length });
             }
@@ -286,19 +292,16 @@
 
         if (candidates.length === 0) return new Set();
 
-        // प्राथमिकता: लंबे और महत्वपूर्ण नाम
         candidates.sort((a, b) => b.len - a.len);
 
         const r = rng(colorSeed * seedModifier + 47);
         const selected = new Set();
         const pool = candidates.slice(0, Math.min(6, candidates.length));
 
-        // 2 से 3 शब्द चुनना (जो एक-दूसरे से सटे हुए न हों)
         for (let i = 0; i < pool.length && selected.size < maxHighlights; i++) {
             const randIdx = Math.floor(r() * pool.length);
             const chosen = pool[randIdx].idx;
             
-            // चेक करें कि यह चुने हुए पहले किसी शब्द के ठीक अगल-बगल न हो
             let isAdjacent = false;
             for (let s of selected) {
                 if (Math.abs(s - chosen) <= 1) { isAdjacent = true; break; }
@@ -308,7 +311,6 @@
             }
         }
 
-        // यदि पास-पास होने के नियम से कम रह गए तो टॉप वाले को जोड़ें
         if (selected.size === 0 && pool.length > 0) {
             selected.add(pool[0].idx);
         }
@@ -328,7 +330,6 @@
         const words = el('headInp').value.trim().split(/\s+/).filter(w => w.length > 0);
         if (!words.length) return;
 
-        // हेडलाइन में अधिकतम 2 प्रमुख संज्ञा शब्द पीले होंगे
         const yellowIndices = pickNounIndices(words, 2, 7919);
 
         words.forEach((w, i) => {
@@ -362,7 +363,6 @@
             }
         });
 
-        // बॉडी टेक्स्ट में अधिकतम 2 से 3 संज्ञा शब्द लाल होंगे
         const maxRed = wordsOnly.length > 15 ? 3 : 2;
         const selectedNouns = pickNounIndices(wordsOnly, maxRed, 104729);
         const redTokenIndices = new Set();
@@ -434,7 +434,7 @@
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 5000);
 
-            // डाउनलोड होते ही डेट को वर्तमान (आज की) तारीख पर रीसेट करें
+            // डाउनलोड पूरा होते ही आज की तारीख पर रीसेट करें
             resetToToday();
             render();
 
@@ -457,6 +457,14 @@
         ready.catch(() => {}).then(() => { render(); drawPhoto(); });
     };
     window.onresize = resizeCanvasView;
+</script>
+
+<!-- ऐप इंस्टॉलेशन (PWA) एक्टिव करने के लिए सर्विस वर्कर -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIGUgPT4gZSAucmVzcG9uZFdpdGgoZmV0Y2goZS5yZXF1ZXN0KSkpOw==')
+      .catch(() => {});
+  }
 </script>
 </body>
 </html>
