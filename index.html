@@ -1,470 +1,652 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pravin News - Poster Generator</title>
-
-    <!-- ऐप की तरह चलाने (PWA/Standalone) के लिए जरूरी टैग्स -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-
-    <link href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wght@700;800&family=Khand:wght@700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        *, *::before, *::after { box-sizing: border-box; }
-
-        body {
-            font-family: 'Anek Devanagari', sans-serif;
-            background: #0f172a; color: white; margin: 0; padding: 15px;
-            min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            overflow-x: hidden;
-        }
-        .main-wrapper {
-            display: flex; flex-direction: row; align-items: flex-start; justify-content: center;
-            gap: 40px; max-width: 1400px; width: 100%; padding: 10px;
-        }
-
-        /* पोस्टर का डिब्बा - 1080x1350 */
-        .canvas-wrap { flex-shrink: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-        #canvasInner { width: 1080px; height: 1350px; transform-origin: top left; }
-
-        #newsCanvas {
-            width: 1080px; height: 1350px; background: #000; position: relative; overflow: hidden;
-            text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;
-        }
-        #photoCanvas { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; z-index: 1; display: block; }
-
-        .overlay-layer { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; z-index: 3; pointer-events: none; }
-        #frameImg { width: 1080px; height: 1350px; display: block; }
-
-        .text-layer { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; z-index: 4; pointer-events: none; }
-
-        .headline-container { position: absolute; top: 0; left: 0; width: 1080px; height: 152px; display: table; padding: 0 50px; }
-        .headline-cell { display: table-cell; vertical-align: middle; text-align: center; }
-        #headlineText {
-            font-family: 'Khand', sans-serif; font-size: 95px; font-weight: 700; color: #ffffff;
-            margin: 0; line-height: 1.1; letter-spacing: 0px;
-            text-shadow: 0px 4px 12px rgba(0,0,0,0.95), 0px 2px 4px rgba(0,0,0,0.8);
-        }
-
-        .news-date-badge {
-            position: absolute; top: 155px; right: 40px; background: rgba(0,0,0,0.75);
-            padding: 4px 15px 6px 15px; border-radius: 4px; border-left: 4px solid #FFD600;
-        }
-        #liveDateText {
-            font-family: 'Anek Devanagari', sans-serif; font-size: 24px; font-weight: 700;
-            color: #ffffff; margin: 0; letter-spacing: 0.5px; line-height: 1;
-        }
-
-        .txt-yellow { color: #FFD600 !important; }
-        .txt-red { color: #c70100 !important; font-weight: 800; }
-
-        .body-text-container { position: absolute; top: 1090px; left: 0; width: 1080px; height: 205px; display: table; padding: 0 60px; }
-        .body-text-cell { display: table-cell; vertical-align: middle; text-align: center; }
-        #storyContent {
-            font-family: 'Anek Devanagari', sans-serif; font-size: 55.88px; font-weight: 700;
-            line-height: 1.25; color: #000000; margin: 0; letter-spacing: 0px; word-wrap: break-word;
-        }
-
-        /* एडिटर पैनल */
-        .editor-ui {
-            background: #1e293b; padding: 18px; border-radius: 12px; width: 100%; max-width: 480px;
-            border: 1px solid #334155; flex-shrink: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        .section-box { background: #0f172a; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
-        label { font-size: 13px; color: #FFD600; display: block; margin-bottom: 6px; font-weight: bold; }
-        .sub-label { color: #94a3b8; font-size: 11px; }
-        input[type="text"], input[type="date"], textarea, input[type="file"], button {
-            width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 6px;
-            border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 14px;
-            font-family: inherit;
-        }
-        input[type="range"] { width: 100%; margin-bottom: 8px; }
-        button { background: #22c55e; border: none; font-weight: bold; cursor: pointer; font-size: 15px; color: #000; transition: 0.2s; }
-        button:hover { background: #16a34a; }
-        .btn-blue { background: #3b82f6; color: #fff; }
-        .btn-blue:hover { background: #2563eb; }
-        .save-btn { background: #ffffff; color: #000; margin-top: 5px; margin-bottom: 0; padding: 12px; font-size: 16px; }
-        .save-btn:hover { background: #e2e8f0; }
-        .row { display: flex; gap: 10px; }
-        .row > div { flex: 1; }
-
-        @media (max-width: 800px) {
-            body { align-items: flex-start; padding: 10px; }
-            .main-wrapper { flex-direction: column; align-items: center; gap: 10px; padding: 0; }
-            .editor-ui { max-width: 94vw; padding: 12px; }
-            .section-box { margin-bottom: 8px; padding: 8px 10px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pravin News - Poster Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wght@700;800&family=Khand:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+body { font-family: 'Anek Devanagari', sans-serif; background:#0f172a; color:#fff; margin:0; padding:14px; min-height:100vh; }
+.main { display:flex; gap:30px; justify-content:center; align-items:flex-start; max-width:1300px; margin:0 auto; }
+.preview { flex-shrink:0; position:sticky; top:14px; }
+#cv { display:block; background:#000; box-shadow:0 18px 45px rgba(0,0,0,.8); max-width:100%; height:auto; }
+.editor { background:#1e293b; padding:16px; border-radius:12px; width:100%; max-width:500px; border:1px solid #334155; }
+.box { background:#0f172a; padding:10px 12px; border-radius:8px; margin-bottom:12px; }
+label { font-size:13px; color:#FFD600; display:block; margin-bottom:6px; font-weight:700; }
+.sub { color:#94a3b8; font-size:11px; font-weight:400; margin-bottom:2px; }
+input[type=text], input[type=date], textarea, input[type=file] { width:100%; margin-bottom:8px; padding:10px; border-radius:6px; border:1px solid #334155; background:#1e293b; color:#fff; font-size:14px; font-family:inherit; }
+input[type=range] { width:100%; margin:0 0 6px; }
+.row { display:flex; gap:8px; } .row > div { flex:1; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.opt { padding:9px 6px; border-radius:8px; border:2px solid #334155; background:#1e293b; color:#e2e8f0; font-weight:700; font-size:13px; cursor:pointer; text-align:center; font-family:inherit; }
+.opt.on { border-color:#FFD600; background:#3a3210; color:#FFD600; }
+button.act { width:100%; padding:12px; border-radius:6px; border:none; font-weight:700; cursor:pointer; font-size:15px; margin-bottom:8px; font-family:inherit; }
+.blue { background:#3b82f6; color:#fff; } .white { background:#fff; color:#000; } .gray { background:#334155; color:#fff; font-size:12px; padding:8px; }
+.chk { display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:6px; color:#e2e8f0; }
+.chk input { width:auto; margin:0; }
+.hide { display:none; }
+@media (max-width:860px){ .main{flex-direction:column; align-items:center; gap:10px;} .preview{position:static;} .editor{max-width:96vw;} }
+</style>
 </head>
 <body>
+<div class="main">
+  <div class="preview"><canvas id="cv" width="1080" height="1350"></canvas></div>
 
-<div class="main-wrapper">
-    <div class="canvas-wrap" id="canvasWrap">
-        <div id="canvasInner">
-            <div id="newsCanvas">
-                <canvas id="photoCanvas" width="1080" height="1350"></canvas>
-
-                <div class="overlay-layer">
-                    <img id="frameImg" alt="Pravin News Overlay Master" crossorigin="anonymous"
-                         src="frame.png"
-                         onerror="this.onerror=null; this.src='https://i.postimg.cc/GmkN6q4B/New-Project-(2).png';">
-                </div>
-
-                <div class="text-layer">
-                    <div class="headline-container">
-                        <div class="headline-cell"><h1 id="headlineText"></h1></div>
-                    </div>
-                    <div class="news-date-badge"><p id="liveDateText"></p></div>
-                    <div class="body-text-container">
-                        <div class="body-text-cell"><p id="storyContent"></p></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="editor">
+    <div class="box">
+      <label>1. डिज़ाइन (टेम्पलेट):</label>
+      <div class="grid" id="tplGrid"></div>
     </div>
-
-    <div class="editor-ui">
-        <div class="section-box">
-            <label>1. मुख्य हेडलाइन (ऊपर):</label>
-            <input type="text" id="headInp" placeholder="अपनी मुख्य हेडलाइन यहाँ टाइप करें..." oninput="render()">
-            <label class="sub-label">हेडिंग का अधिकतम साइज (लंबी हो तो अपने आप छोटी होगी)</label>
-            <input type="range" id="headSizeSlider" min="50" max="110" value="95" oninput="render()">
-        </div>
-
-        <div class="section-box">
-            <label>2. न्यूज़ फोटो अपलोड और अलाइनमेंट:</label>
-            <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload()">
-            <div class="row">
-                <div><label class="sub-label">ज़ूम</label><input type="range" id="sizeZoom" min="400" max="2800" value="1080" oninput="drawPhoto()"></div>
-                <div><label class="sub-label">ऊपर/नीचे</label><input type="range" id="moveY" min="-800" max="800" value="0" oninput="drawPhoto()"></div>
-                <div><label class="sub-label">दाएँ/बाएँ</label><input type="range" id="moveX" min="-800" max="800" value="0" oninput="drawPhoto()"></div>
-            </div>
-        </div>
-
-        <div class="section-box">
-            <label>3. मुख्य समाचार विवरण (नीचे, पोस्टर पर):</label>
-            <textarea id="bodyInp" rows="4" placeholder="पोस्टर के नीचे की खबर यहाँ लिखें..." oninput="render()"></textarea>
-        </div>
-
-        <div class="section-box">
-            <label>4. खबर की तारीख (बैज पर):</label>
-            <input type="date" id="dateInp" oninput="render()">
-        </div>
-
-        <button class="btn-blue" onclick="reshuffleColors()">रंग बदलें ↻</button>
-        <button class="save-btn" id="saveBtn" onclick="downloadFinalPoster()">पोस्टर डाउनलोड करें (PNG)</button>
+    <div class="box">
+      <label>2. साइज़ / फ़ॉर्मेट:</label>
+      <div class="grid" id="fmtGrid"></div>
     </div>
+    <div class="box">
+      <label>3. मुख्य हेडलाइन:</label>
+      <input type="text" id="headInp" placeholder="हेडलाइन लिखें... (चाहें तो *शब्द* तारे में लिखकर खुद रंग चुनें)" oninput="render()">
+      <label id="bodyLbl">नीचे की खबर:</label>
+      <textarea id="bodyInp" rows="3" placeholder="नीचे का समाचार विवरण..." oninput="render()"></textarea>
+      <label id="tagLbl">टैग / बड़ा शब्द (खाली छोड़ें तो अपने आप):</label>
+      <input type="text" id="tagInp" placeholder="जैसे: BREAKING, बधाई, ALERT" oninput="render()">
+    </div>
+    <div class="box">
+      <label>4. फ़ोटो और अलाइनमेंट:</label>
+      <input type="file" id="imageLoader" accept="image/*" onchange="loadPhoto()">
+      <div class="row">
+        <div><div class="sub">ज़ूम</div><input type="range" id="zoom" min="0.5" max="3" step="0.01" value="1" oninput="render()"></div>
+        <div><div class="sub">दाएँ/बाएँ</div><input type="range" id="offX" min="-100" max="100" value="0" oninput="render()"></div>
+        <div><div class="sub">ऊपर/नीचे</div><input type="range" id="offY" min="-100" max="100" value="0" oninput="render()"></div>
+      </div>
+      <div id="thumbCtl" class="hide">
+        <div class="chk"><input type="checkbox" id="ringOn" checked onchange="render()"> लाल गोला</div>
+        <div class="chk"><input type="checkbox" id="arrowOn" checked onchange="render()"> तीर</div>
+        <div class="row">
+          <div><div class="sub">गोला दाएँ/बाएँ</div><input type="range" id="ringX" min="5" max="95" value="62" oninput="render()"></div>
+          <div><div class="sub">गोला ऊपर/नीचे</div><input type="range" id="ringY" min="10" max="90" value="52" oninput="render()"></div>
+          <div><div class="sub">गोला साइज़</div><input type="range" id="ringS" min="0.5" max="2" step="0.05" value="1" oninput="render()"></div>
+        </div>
+      </div>
+    </div>
+    <div class="box">
+      <label>5. खबर की तारीख:</label>
+      <input type="date" id="dateInp" oninput="render()">
+      <label>लोगो (PNG, एक बार डालिए - याद रहेगा):</label>
+      <input type="file" id="logoLoader" accept="image/png,image/*" onchange="loadLogo()">
+      <button class="act gray" onclick="clearLogo()">लोगो हटाएँ</button>
+    </div>
+    <button class="act blue" onclick="reshuffle()">रंग बदलें ↻</button>
+    <button class="act white" id="saveBtn" onclick="download()">पोस्टर डाउनलोड करें (PNG)</button>
+  </div>
 </div>
 
 <script>
-    const W = 1080, H = 1350;
-    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    let photo = null;
-    let colorSeed = 1;
+/* =========================================================
+   Pravin News Poster Studio  -  सब कुछ सीधे कैनवास पर बनता है,
+   इसलिए प्रीव्यू और डाउनलोड हमेशा एक जैसे आते हैं।
+   ========================================================= */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const FMTS = {
+  post45: { W:1080, H:1350, name:'4:5 पोस्ट' },
+  square: { W:1080, H:1080, name:'1:1 चौकोर' },
+  story:  { W:1080, H:1920, name:'9:16 स्टोरी' },
+  wide:   { W:1280, H:720,  name:'16:9 थंबनेल' }
+};
+const HANDLE = '@PravinNews';
+const KHAND = '"Khand", "Anek Devanagari", sans-serif';
+const ANEK  = '"Anek Devanagari", sans-serif';
 
-    // हिंदी स्टॉप-वर्ड्स (क्रिया, सर्वनाम, कारक, अव्यय - जिन्हें कलर नहीं करना है)
-    const HINDI_STOP_WORDS = new Set([
-        "के", "का", "की", "को", "में", "से", "पर", "ने", "और", "तथा", "या", "भी", "ही", "तो",
-        "है", "हैं", "था", "थी", "थे", "होगी", "होगा", "होंगे", "रहा", "रही", "रहे", "हुआ", "हुई", "हुए",
-        "किया", "किए", "गया", "गई", "गए", "जाएगा", "आया", "आई", "आए", "दिया", "दिए", "लिया", "लिए",
-        "यह", "वह", "इस", "उस", "इन", "उन", "अपने", "अपनी", "अपना", "जो", "जिस", "जिन", "कि", "ताकि",
-        "नहीं", "मत", "ना", "क्या", "कहाँ", "कब", "कैसे", "क्यों", "वाला", "वाली", "वाले", "कर", "होने"
-    ]);
+let S = { tpl:'breaking', fmt:'post45', seed:1 };
+let photo = null, logo = null, frame = null;
 
-    function el(id) { return document.getElementById(id); }
+function el(id){ return document.getElementById(id); }
 
-    function rng(seed) {
-        let a = seed >>> 0;
-        return function () {
-            a = (a + 0x6D2B79F5) | 0;
-            let t = Math.imul(a ^ (a >>> 15), 1 | a);
-            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-        };
-    }
+/* ---------------- संज्ञा पहचान (नाम रंगने के लिए) ---------------- */
+// इन सूचियों में आप खुद शब्द जोड़ सकते हैं (स्पेस या नई लाइन से अलग)
+const STOP = new Set((`
+ का की के को में पर से ने तक लिए लिये द्वारा साथ बाद पहले बीच अंदर बाहर ऊपर नीचे दौरान अनुसार बारे बाबत तरफ ओर कारण
+ यहां यहाँ वहां वहाँ जहां जहाँ कहां कहाँ आज कल अभी फिर जल्द अब तब जब तो भी ही नहीं न कुछ सभी सब कई एक दो तीन चार पांच
+ छह सात आठ नौ दस इस उस यह वह ये वे जो जिस जिसे जिन जिनके कि क्योंकि लेकिन परंतु और एवं तथा या अपने अपनी अपना उनके
+ उनकी उनका उन्हें उसे इसे इसके इसकी इसका उसके उसकी उसका मेरे मेरी मेरा हम आप तुम उन्होंने उसने इन्होंने हमारे आपके
+ जैसे जैसा जैसी ऐसे ऐसा ऐसी कैसे कौन क्या किस किसका किसकी क्यों कितना कितने आदि सहित सिर्फ केवल बस ताकि जिससे जिसमें
+ है हैं था थे थी हो होता होती होते होगा होगी होंगे हुआ हुई हुए हुईं गया गई गए गये गयी रहा रही रहे किया किए दिया दी दिए
+ दिये लिया ली कहा कही कहे बताया बताई बताए बताते सुनाई सुनाया सुनाए पहुंचे पहुंची पहुंचा पहुंचना निकला निकली निकले मिला
+ मिली मिले लगी लगा लगे आया आई आए आये आने जाने करने देने लेने होने रखने बनाने बनाया बनी बने बना करें करे करेगा करेंगे
+ करना करता करती करते देना देता देती देते लेना लेता लेती लेते जाना जाता जाती जाते आना आता आती आते रहना रखा रखी रखे
+ उठा उठाई उठे दिखा दिखी दिखे दिखाई दिखाया चला चली चले जुटी जुटे जुटा मचा मची मचे टला टली टले घुसी घुसा घुसे पड़ा पड़ी
+ पड़े खुला खुली खुले सौंपी सौंपा चढ़ा रोका रोकी लगाई लगाया उठाया जताई जताया भेजा भेजी भेजे पाया पाई पाए सकता सकती सकते
+ सोमवार मंगलवार बुधवार गुरुवार शुक्रवार शनिवार रविवार सुबह दोपहर शाम रात बीती बीते आगामी वर्ष साल महीने दिन घंटे मिनट
+ लाख करोड़ हजार सैकड़ा किलो किलोग्राम प्रतिशत रुपये रुपया
+ बड़ा बड़ी बड़े छोटा छोटी छोटे नया नई नए पुराना पुरानी पुराने अधिक ज्यादा कम पूरा पूरी पूरे अचानक तुरंत तत्काल करीब लगभग
+ सुरक्षित गंभीर भारी भव्य बेकाबू जोरदार शानदार प्रमुख मुख्य विशेष अन्य दूसरा दूसरी दूसरे पहला पहली आवश्यक सकुशल स्थानीय
+ सरकारी राष्ट्रीय क्षेत्रीय संबंधित उत्कृष्ट उल्लेखनीय सैकड़ों हजारों लाखों कुल सारे सारी सारा हर प्रत्येक सामान्य
+ जीता जीती जीते परखी परखा परखे कराया कराई कराए करवाया सौंपे आधे आधा आधी तैनात उड़े उड़ा उड़ी
+`).split(/\s+/).filter(Boolean));
+const HONOR = new Set(['श्री','श्रीमती','सुश्री','डॉ','डॉ.','डा.','कुमारी','पंडित','मौलाना','सूबेदार']);
+const ROLE = new Set(['सीएम','पीएम','मुख्यमंत्री','प्रधानमंत्री','मंत्री','विधायक','सांसद','महापौर','आयुक्त','जिलाधिकारी','डीएम','एसएसपी',
+ 'एसपी','एसीपी','डीसीपी','एडीसीपी','कोच','अध्यक्ष','उपाध्यक्ष','सचिव','प्रबंधक','इंस्पेक्टर','दरोगा','सिपाही','चालक','युवक','युवती',
+ 'पहलवान','प्रभारी','निरीक्षक','अधिकारी','चेयरमैन','निदेशक','कलेक्टर','न्यायाधीश','जज']);
+const PLACE_TYPE = new Set(['थाना','थाने','गांव','गाँव','जिला','जनपद','तहसील','ब्लॉक','मंदिर','घाट','स्टेडियम','कॉलेज','स्कूल','अस्पताल',
+ 'बैंक','पुल','चौराहा','चौकी','कस्बा','शहर','मोहल्ला','नगर','बाजार','हाईवे','मार्ग','रोड','स्टेशन','शाखा','विश्वविद्यालय','सभागार',
+ 'संकुल','अदालत','कोर्ट','मस्जिद','चर्च','गुरुद्वारा','पार्क','आश्रम','धाम','मंडल','कार्यालय']);
+const KNOWN_PLACES = (`
+ वाराणसी काशी बनारस लखनऊ दिल्ली मुंबई गोरखपुर प्रयागराज इलाहाबाद अयोध्या जौनपुर मऊ बलिया गाजीपुर चंदौली मिर्जापुर भदोही सोनभद्र
+ आजमगढ़ आज़मगढ़ बस्ती कानपुर आगरा मेरठ नोएडा अहमदाबाद पटना बिहार झारखंड बंगाल गुजरात भारत सारनाथ पैगंबरपुर सिगरा लोहता
+ चौबेपुर शिवपुर जंसा बड़ागांव हरहुआ पिंडरा रामनगर राजातालाब सेवापुरी चोलापुर कैंट लंका अस्सी मैदागिन गोदौलिया दशाश्वमेध
+ राजघाट चौकाघाट पांडेयपुर भेलूपुर लहरतारा मंडुवाडीह कचहरी रोहनिया जमालपुर बाबतपुर छितौनी परमानंदपुर औड़िहार जूनागढ़ हालोल
+ पंचमहल घोसी बनियापार करधना बरकी पूराघाट चांदमारी क्राइस्ट मिर्जामुराद गाजियाबाद उत्तराखंड पंजाब राजस्थान महाराष्ट्र
+ काशी-विश्वनाथ विश्वनाथ गंगा वरुणा एयर-शो
+`).split(/\s+/).filter(Boolean);
+const KNOWN_SET = new Set(KNOWN_PLACES.map(x => x.replace('-', ' ')));
+const WEAK_SKIP = new Set((`
+ निर्देश सुरक्षा प्रबंधन मांग तैयारी तैयारियां आशंका स्वागत उत्साह जांच कार्रवाई व्यवस्था समस्या सूचना जानकारी मामला घटना प्रयास
+ उपलब्धि सम्मान बधाई शुभकामनाएं यातायात अपील संकल्प शपथ दौरे दौरा आगमन भ्रमण निरीक्षण ट्रायल बात बातें मौका स्थिति माहौल
+`).split(/\s+/).filter(Boolean));
+const VERB_END = /(ीं|ेगा|ेगी|ेंगे|ोंगे|ोगा|ोगी|ाया|ाए|ाकर|कर|रहा|रहे|रही|वाले|वाली|वाला)$/;
 
-    function cleanWord(w) {
-        return w.replace(/[^\u0900-\u0963\u0966-\u097FA-Za-z0-9]/g, '');
-    }
+function cleanWord(w){
+  const P = /^[\s"'“”‘’()\[\]{}.,;:!?।|\-–—*]+|[\s"'“”‘’()\[\]{}.,;:!?।|\-–—*]+$/g;
+  return w.replace(P, '');
+}
+function isStop(c){ return !c || c.length < 2 || STOP.has(c) || /^[\d०-९][\d०-९.,:\/\-]*$/.test(c); }
 
-    // तारीख को आज की तारीख पर सेट करना
-    function resetToToday() {
-        const d = el('dateInp');
-        const t = new Date();
-        const mm = String(t.getMonth() + 1).padStart(2, '0');
-        const dd = String(t.getDate()).padStart(2, '0');
-        d.value = `${t.getFullYear()}-${mm}-${dd}`;
-    }
-
-    function fmtDate(v) {
-        if (!v) return '';
-        const p = v.split('-');
-        if (p.length !== 3) return '';
-        return `${parseInt(p[2], 10)} ${MONTHS[parseInt(p[1], 10) - 1]} ${p[0]}`;
-    }
-
-    /* ---------- कैनवास फोटो रेंडरर ---------- */
-    const pc = el('photoCanvas');
-    const pctx = pc.getContext('2d');
-
-    function blurredBackground(img) {
-        const s = Math.max(W / img.width, H / img.height);
-        const bw = img.width * s, bh = img.height * s;
-        const prev = document.createElement('canvas');
-        prev.width = Math.round(W / 24); prev.height = Math.round(H / 24);
-        const pctx2 = prev.getContext('2d');
-        pctx2.imageSmoothingQuality = 'high';
-        pctx2.drawImage(img, (prev.width - bw / 24) / 2, (prev.height - bh / 24) / 2, bw / 24, bh / 24);
-        const mid = document.createElement('canvas');
-        mid.width = Math.round(W / 6); mid.height = Math.round(H / 6);
-        const mctx = mid.getContext('2d');
-        mctx.imageSmoothingQuality = 'high';
-        mctx.drawImage(prev, 0, 0, mid.width, mid.height);
-        return mid;
-    }
-
-    function drawPhoto() {
-        pctx.globalCompositeOperation = 'source-over';
-        pctx.clearRect(0, 0, W, H);
-        pctx.fillStyle = '#1e293b';
-        pctx.fillRect(0, 0, W, H);
-
-        if (!photo) {
-            pctx.fillStyle = '#94a3b8';
-            pctx.font = '700 60px "Anek Devanagari", sans-serif';
-            pctx.textAlign = 'center';
-            pctx.fillText('न्यूज़ फ़ोटो चुनें', W / 2, H * 0.45);
-            return;
-        }
-
-        pctx.imageSmoothingEnabled = true;
-        pctx.imageSmoothingQuality = 'high';
-        pctx.drawImage(blurredBackground(photo), 0, 0, W, H);
-        pctx.fillStyle = 'rgba(0,0,0,0.45)';
-        pctx.fillRect(0, 0, W, H);
-
-        const zoom = parseFloat(el('sizeZoom').value);
-        const iw = zoom, ih = photo.height * zoom / photo.width;
-        const cx = W / 2 + parseFloat(el('moveX').value);
-        const cy = H * 0.45 + parseFloat(el('moveY').value);
-        if ('filter' in pctx) pctx.filter = 'contrast(1.08) brightness(1.03) saturate(1.06)';
-        pctx.drawImage(photo, cx - iw / 2, cy - ih / 2, iw, ih);
-        pctx.filter = 'none';
-
-        const g = pctx.createLinearGradient(0, H, 0, 0);
-        g.addColorStop(0, 'rgba(0,0,0,0.35)');
-        g.addColorStop(0.5, 'rgba(0,0,0,0)');
-        g.addColorStop(1, 'rgba(0,0,0,0.2)');
-        pctx.globalCompositeOperation = 'multiply';
-        pctx.fillStyle = g;
-        pctx.fillRect(0, 0, W, H);
-        pctx.globalCompositeOperation = 'source-over';
-    }
-
-    function handleImageUpload() {
-        const file = el('imageLoader').files[0];
-        if (!file) return;
-        const img = new Image();
-        img.onload = function () {
-            photo = img;
-            el('sizeZoom').value = 1080;
-            el('moveX').value = 0;
-            el('moveY').value = 0;
-            drawPhoto();
-        };
-        img.onerror = function () { alert('यह फ़ोटो खुल नहीं पाई, कोई और फ़ोटो चुनें।'); };
-        img.src = URL.createObjectURL(file);
-    }
-
-    /* ---------- स्मार्ट संज्ञा चयन (अधिकतम 2-3 शब्द) ---------- */
-    function pickNounIndices(wordsList, maxHighlights = 2, seedModifier = 1) {
-        const candidates = [];
-        wordsList.forEach((w, idx) => {
-            const clean = cleanWord(w);
-            if (clean.length >= 2 && !HINDI_STOP_WORDS.has(clean)) {
-                candidates.push({ idx, len: clean.length });
-            }
-        });
-
-        if (candidates.length === 0) return new Set();
-
-        candidates.sort((a, b) => b.len - a.len);
-
-        const r = rng(colorSeed * seedModifier + 47);
-        const selected = new Set();
-        const pool = candidates.slice(0, Math.min(6, candidates.length));
-
-        for (let i = 0; i < pool.length && selected.size < maxHighlights; i++) {
-            const randIdx = Math.floor(r() * pool.length);
-            const chosen = pool[randIdx].idx;
-            
-            let isAdjacent = false;
-            for (let s of selected) {
-                if (Math.abs(s - chosen) <= 1) { isAdjacent = true; break; }
-            }
-            if (!isAdjacent) {
-                selected.add(chosen);
-            }
-        }
-
-        if (selected.size === 0 && pool.length > 0) {
-            selected.add(pool[0].idx);
-        }
-
-        return selected;
-    }
-
-    function appendPlain(parent, text) { parent.appendChild(document.createTextNode(text)); }
-    function appendSpan(parent, text, cls) {
-        const s = document.createElement('span');
-        s.className = cls; s.textContent = text; parent.appendChild(s);
-    }
-
-    function renderHeadline() {
-        const h = el('headlineText');
-        h.textContent = '';
-        const words = el('headInp').value.trim().split(/\s+/).filter(w => w.length > 0);
-        if (!words.length) return;
-
-        const yellowIndices = pickNounIndices(words, 2, 7919);
-
-        words.forEach((w, i) => {
-            if (i > 0) appendPlain(h, ' ');
-            if (yellowIndices.has(i)) appendSpan(h, w, 'txt-yellow'); 
-            else appendPlain(h, w);
-        });
-
-        let size = parseInt(el('headSizeSlider').value, 10);
-        h.style.fontSize = size + 'px';
-        while (h.offsetHeight > 148 && size > 40) { 
-            size -= 2; 
-            h.style.fontSize = size + 'px'; 
-        }
-    }
-
-    function renderBody() {
-        const p = el('storyContent');
-        p.textContent = '';
-        const text = el('bodyInp').value.trim();
-        if (!text) return;
-
-        const tokens = text.split(/(\s+)/);
-        const wordsOnly = [];
-        const wordIndices = [];
-        
-        tokens.forEach((t, i) => {
-            if (t.trim().length) {
-                wordsOnly.push(t);
-                wordIndices.push(i);
-            }
-        });
-
-        const maxRed = wordsOnly.length > 15 ? 3 : 2;
-        const selectedNouns = pickNounIndices(wordsOnly, maxRed, 104729);
-        const redTokenIndices = new Set();
-        selectedNouns.forEach(wIdx => redTokenIndices.add(wordIndices[wIdx]));
-
-        tokens.forEach((t, i) => {
-            if (!t.length) return;
-            if (!t.trim().length) { appendPlain(p, t); return; }
-            if (redTokenIndices.has(i)) appendSpan(p, t, 'txt-red'); 
-            else appendPlain(p, t);
-        });
-
-        let size = 55.88;
-        p.style.fontSize = size + 'px';
-        while (p.offsetHeight > 200 && size > 34) { 
-            size -= 2; 
-            p.style.fontSize = size + 'px'; 
-        }
-    }
-
-    function render() {
-        if (!el('dateInp').value) resetToToday();
-        el('liveDateText').textContent = fmtDate(el('dateInp').value);
-        renderHeadline();
-        renderBody();
-    }
-
-    function reshuffleColors() { 
-        colorSeed += 1; 
-        render(); 
-    }
-
-    function resizeCanvasView() {
-        const wrap = el('canvasWrap'), inner = el('canvasInner');
-        let target;
-        if (window.innerWidth <= 800) target = Math.min(window.innerWidth - 24, 520);
-        else target = 520;
-        const scale = target / W;
-        inner.style.transform = `scale(${scale})`;
-        wrap.style.width = Math.round(W * scale) + 'px';
-        wrap.style.height = Math.round(H * scale) + 'px';
-    }
-
-    /* ---------- डाउनलोड और ऑटो डेट रीसेट ---------- */
-    async function downloadFinalPoster() {
-        const btn = el('saveBtn');
-        const wrap = el('canvasWrap'), inner = el('canvasInner');
-        const old = btn.textContent;
-        btn.textContent = 'तैयार हो रहा है...';
-        try {
-            await document.fonts.ready;
-            render();
-
-            inner.style.transform = 'none';
-            wrap.style.width = W + 'px'; wrap.style.height = H + 'px';
-            await new Promise(r => setTimeout(r, 150));
-
-            const canvas = await html2canvas(el('newsCanvas'), {
-                scale: 1, useCORS: true, logging: false, allowTaint: false, width: W, height: H
-            });
-            const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-            const t = new Date();
-            const pad = n => String(n).padStart(2, '0');
-            const name = `NewsPoster_${t.getFullYear()}${pad(t.getMonth() + 1)}${pad(t.getDate())}_${pad(t.getHours())}${pad(t.getMinutes())}.png`;
-            
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = name;
-            document.body.appendChild(a); a.click(); a.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 5000);
-
-            // डाउनलोड पूरा होते ही आज की तारीख पर रीसेट करें
-            resetToToday();
-            render();
-
-        } catch (err) {
-            console.error(err);
-            alert('पोस्टर सेव नहीं हो पाया। कृपया दोबारा प्रयास करें।');
-        } finally {
-            resizeCanvasView();
-            btn.textContent = old;
-        }
-    }
-
-    window.onload = function () {
-        resetToToday();
-        drawPhoto();
-        resizeCanvasView();
-        const ready = document.fonts && document.fonts.load
-            ? Promise.all([document.fonts.load('700 95px Khand'), document.fonts.load('700 55px "Anek Devanagari"')])
-            : Promise.resolve();
-        ready.catch(() => {}).then(() => { render(); drawPhoto(); });
-    };
-    window.onresize = resizeCanvasView;
-</script>
-
-<!-- ऐप इंस्टॉलेशन (PWA) एक्टिव करने के लिए सर्विस वर्कर -->
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIGUgPT4gZSAucmVzcG9uZFdpdGgoZmV0Y2goZS5yZXF1ZXN0KSkpOw==')
-      .catch(() => {});
+function findNouns(words){
+  const n = words.length, used = new Array(n).fill(false), ents = [];
+  const free = (a,b)=>{ for(let k=a;k<=b;k++) if(used[k]) return false; return true; };
+  const take = (a,b,score)=>{ if(!free(a,b)) return false; for(let k=a;k<=b;k++) used[k]=true; ents.push({a,b,score}); return true; };
+  const nounish = k => k>=0 && k<n && !isStop(words[k]) && !HONOR.has(words[k]) && !ROLE.has(words[k]) && !PLACE_TYPE.has(words[k]) && !WEAK_SKIP.has(words[k]);
+  for(let i=0;i<n;i++){ if(HONOR.has(words[i])||ROLE.has(words[i])){ let j=i+1; while(j<n && j<=i+2 && nounish(j)) j++; if(j>i+1) take(i+1,j-1,5); } }
+  for(let i=0;i<n;i++){ if(i+1<n && KNOWN_SET.has(words[i]+' '+words[i+1])) take(i,i+1,4); else if(KNOWN_SET.has(words[i])) take(i,i,4); }
+  for(let i=0;i<n;i++){
+    if(!PLACE_TYPE.has(words[i])) continue;
+    const prev = ents.find(e=>e.b===i-1 && e.score>=4);
+    if(prev && !used[i]){ prev.b=i; used[i]=true; }
+    else if(nounish(i-1) && take(i-1,i,4)){}
+    else if(nounish(i+1) && take(i,i+1,4)){}
+    else take(i,i,2);
   }
+  for(let i=0;i<n;i++) if(/[A-Za-z]{2,}/.test(words[i]) && !isStop(words[i])) take(i,i,4);
+  for(let i=0;i<n;i++) if(ROLE.has(words[i])) take(i,i,3);
+  for(let i=0;i<n;i++){ const w=words[i]; if(!isStop(w)&&!HONOR.has(w)&&!WEAK_SKIP.has(w)&&w.length>=3&&!VERB_END.test(w)) take(i,i,1); }
+  return ents;
+}
+function rng(seed){ let a=seed>>>0; return function(){ a=(a+0x6D2B79F5)|0; let t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+function chooseNouns(ents, max, r, lens){
+  const by={}; ents.forEach(e=>{ (by[e.score]=by[e.score]||[]).push(e); });
+  const order=[];
+  [5,4,3,2,1].forEach(sc=>{
+    let arr=(by[sc]||[]).slice();
+    const L=e=>{ let l=0; for(let k=e.a;k<=e.b;k++) l+=lens[k]||0; return l; };
+    if(sc===1){ arr.sort((x,y)=>L(y)-L(x)); arr=arr.slice(0,6); }
+    for(let i=arr.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+    order.push(...arr);
+  });
+  const picked=[];
+  for(const e of order){ if(picked.length>=max) break; if(picked.every(p=>e.a>p.b+1||e.b<p.a-1)) picked.push(e); }
+  return picked;
+}
+// पाठ -> [{t:शब्द, hi:true/false}]   (*तारे* में लिखे शब्द हों तो सिर्फ़ वही रंगेंगे)
+function colorWords(text, max, seedBase){
+  text = (text||'').trim();
+  if(!text) return [];
+  if(/\*[^*]+\*/.test(text)){
+    const out=[];
+    text.split(/(\*[^*]+\*)/).forEach(seg=>{
+      if(!seg) return;
+      const hi=/^\*[^*]+\*$/.test(seg);
+      (hi?seg.slice(1,-1):seg).split(/\s+/).filter(Boolean).forEach(w=>out.push({t:w,hi}));
+    });
+    return out;
+  }
+  const words=text.split(/\s+/).filter(Boolean);
+  const clean=words.map(cleanWord);
+  const r=rng(S.seed*seedBase+13);
+  const picked=chooseNouns(findNouns(clean), words.length<=4?1:max, r, clean.map(w=>w.length));
+  const hi=new Set(); picked.forEach(e=>{ for(let k=e.a;k<=e.b;k++) hi.add(k); });
+  return words.map((t,i)=>({t,hi:hi.has(i)}));
+}
+
+/* ---------------- कैनवास के हेल्पर ---------------- */
+function rrect(x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);
+  ctx.beginPath(); ctx.moveTo(x+rr,y); ctx.arcTo(x+w,y,x+w,y+h,rr); ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr); ctx.arcTo(x,y,x+w,y,rr); ctx.closePath();
+}
+function poly(pts){ ctx.beginPath(); pts.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); }
+function vgrad(y0,y1,stops){ const g=ctx.createLinearGradient(0,y0,0,y1); stops.forEach(s=>g.addColorStop(s[0],s[1])); return g; }
+
+// फ़ोटो को किसी भी आकार (path) में भरता है। हल्का धुंधला बैकग्राउंड भी देता है।
+function paintPhoto(x,y,w,h,pathFn,opts){
+  opts=opts||{};
+  ctx.save();
+  if(pathFn){ pathFn(); ctx.clip(); } else { ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip(); }
+  if(!photo){
+    ctx.fillStyle=vgrad(y,y+h,[[0,'#334155'],[1,'#0f172a']]); ctx.fillRect(x,y,w,h);
+    ctx.fillStyle='#94a3b8'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='700 '+Math.round(Math.min(w,h)*0.07)+'px '+ANEK; ctx.fillText('न्यूज़ फ़ोटो चुनें', x+w/2, y+h/2); ctx.restore(); return;
+  }
+  const pw=photo.width, ph=photo.height;
+  // 1) धुंधला बैकग्राउंड
+  const cs=Math.max(w/pw,h/ph), bw=pw*cs, bh=ph*cs;
+  const k=24, small=document.createElement('canvas'); small.width=Math.max(8,Math.round(w/k)); small.height=Math.max(8,Math.round(h/k));
+  const sc=small.getContext('2d'); sc.imageSmoothingQuality='high';
+  sc.drawImage(photo,(small.width-bw/k)/2,(small.height-bh/k)/2,bw/k,bh/k);
+  const mid=document.createElement('canvas'); mid.width=Math.max(16,Math.round(w/6)); mid.height=Math.max(16,Math.round(h/6));
+  const mc=mid.getContext('2d'); mc.imageSmoothingQuality='high'; mc.drawImage(small,0,0,mid.width,mid.height);
+  ctx.imageSmoothingQuality='high'; ctx.drawImage(mid,x,y,w,h);
+  ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(x,y,w,h);
+  // 2) असली फ़ोटो
+  const base = opts.base==='width' ? w/pw : cs;
+  const z=parseFloat(el('zoom').value)*base, iw=pw*z, ih=ph*z;
+  const cx=x+w/2+parseFloat(el('offX').value)/100*w;
+  const cy=(opts.cy!==undefined? opts.cy : y+h/2)+parseFloat(el('offY').value)/100*h;
+  if(opts.filter && 'filter' in ctx) ctx.filter=opts.filter;
+  ctx.drawImage(photo,cx-iw/2,cy-ih/2,iw,ih);
+  ctx.filter='none';
+  ctx.restore();
+}
+
+/* टेक्स्ट: लाइनों में बाँटना, साइज़ ऑटो-फिट, रंगीन शब्द */
+function metrics(font){
+  ctx.font=font; const m=ctx.measureText('अgहQ');
+  const asc=m.fontBoundingBoxAscent||parseFloat(font.match(/(\d+(\.\d+)?)px/)[1])*0.9;
+  const desc=m.fontBoundingBoxDescent||parseFloat(font.match(/(\d+(\.\d+)?)px/)[1])*0.3;
+  return {asc,desc};
+}
+function wrapWords(words,maxW){
+  const sp=ctx.measureText(' ').width, lines=[]; let cur={words:[],w:0};
+  words.forEach(wd=>{
+    const ww=ctx.measureText(wd.t).width;
+    if(cur.words.length && cur.w+sp+ww>maxW){ lines.push(cur); cur={words:[],w:0}; }
+    cur.w += (cur.words.length?sp:0)+ww; cur.words.push({t:wd.t,hi:wd.hi,w:ww});
+  });
+  if(cur.words.length) lines.push(cur);
+  return {lines,sp};
+}
+function layoutText(words,family,weight,maxW,maxH,maxS,minS,lh){
+  let size=Math.round(maxS), res=null;
+  for(;size>=minS;size-=2){
+    const font=weight+' '+size+'px '+family; ctx.font=font;
+    res=wrapWords(words,maxW);
+    const ok=res.lines.every(l=>l.w<=maxW+1) && res.lines.length*size*lh<=maxH;
+    if(ok) return Object.assign({size,font,lh,h:res.lines.length*size*lh},res,metrics(font));
+  }
+  size=minS; const font=weight+' '+size+'px '+family; ctx.font=font; res=wrapWords(words,maxW);
+  return Object.assign({size,font,lh,h:res.lines.length*size*lh},res,metrics(font));
+}
+// L: layoutText का नतीजा.  align: left | center | right
+function drawText(L,x,y,align,base,hi,o){
+  o=o||{}; ctx.font=L.font; ctx.textBaseline='alphabetic'; ctx.textAlign='left'; ctx.lineJoin='round';
+  const box=L.size*L.lh, pad=(box-(L.asc+L.desc))/2;
+  L.lines.forEach((ln,i)=>{
+    const by=y+i*box+pad+L.asc;
+    let sx = align==='center'? x-ln.w/2 : align==='right'? x-ln.w : x;
+    ln.words.forEach(wd=>{
+      if(o.shadow){ ctx.shadowColor=o.shadow; ctx.shadowBlur=o.shadowBlur||12; ctx.shadowOffsetY=o.shadowY||4; }
+      if(o.stroke){ ctx.strokeStyle=o.stroke; ctx.lineWidth=o.sw||L.size*0.1; ctx.strokeText(wd.t,sx,by); }
+      ctx.fillStyle=wd.hi?hi:base; ctx.fillText(wd.t,sx,by);
+      ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+      sx+=wd.w+L.sp;
+    });
+  });
+}
+
+/* तारीख / ब्रांड */
+function dateText(){
+  const v=el('dateInp').value; if(!v) return '';
+  const p=v.split('-'); return parseInt(p[2],10)+' '+MONTHS[parseInt(p[1],10)-1]+' '+p[0];
+}
+function drawPill(text,x,y,h,align,bg,fg,border,font){
+  ctx.font=font||('800 '+Math.round(h*0.5)+'px '+ANEK);
+  const tw=ctx.measureText(text).width, w=tw+h*0.8;
+  const px= align==='right'? x-w : align==='center'? x-w/2 : x;
+  rrect(px,y,w,h,h*0.22); ctx.fillStyle=bg; ctx.fill();
+  if(border){ ctx.lineWidth=Math.max(2,h*0.07); ctx.strokeStyle=border; ctx.stroke(); }
+  ctx.fillStyle=fg; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text,px+w/2,y+h/2+h*0.03);
+  return {x:px,w};
+}
+function drawBrand(x,y,h,align){
+  if(logo){
+    const lw=logo.width*h/logo.height, w=lw+h*0.3;
+    const px= align==='right'? x-w : align==='center'? x-w/2 : x;
+    rrect(px,y,w,h+h*0.0,h*0.18); ctx.fillStyle='#fff'; ctx.fill();
+    ctx.drawImage(logo,px+h*0.15,y+h*0.0,lw,h);
+    return {x:px,w};
+  }
+  return drawPill(HANDLE,x,y,h,align,'#ffffff','#111827','#d10000');
+}
+function drawDate(x,y,h,align,bg,fg,accent){
+  const t=dateText(); if(!t) return;
+  ctx.font='800 '+Math.round(h*0.52)+'px '+ANEK;
+  const w=ctx.measureText(t).width+h*0.75, px= align==='right'? x-w : align==='center'? x-w/2 : x;
+  ctx.fillStyle=bg; ctx.fillRect(px,y,w,h); ctx.fillStyle=accent; ctx.fillRect(px,y,Math.max(4,h*0.1),h);
+  ctx.fillStyle=fg; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(t,px+w/2+h*0.04,y+h/2+h*0.03);
+}
+function footerText(x,y,align,color,size,text){
+  ctx.font='800 '+size+'px '+ANEK; ctx.fillStyle=color; ctx.textAlign=align; ctx.textBaseline='middle'; ctx.fillText(text,x,y);
+}
+
+/* ---------------- टेम्पलेट ---------------- */
+const TPL = {};
+
+/* 0) क्लासिक - आपका पुराना डिज़ाइन (सिर्फ़ 4:5) */
+TPL.classic = { name:'क्लासिक (आपका फ्रेम)', fmts:['post45'], tag:null, body:true, hi:'#FFD600', bodyLabel:'नीचे की खबर:',
+ draw(g,head,body){
+  const {W,H}=g;
+  paintPhoto(0,0,W,H,null,{base:'width',cy:H*0.45,filter:'contrast(1.08) brightness(1.03) saturate(1.06)'});
+  const gr=ctx.createLinearGradient(0,H,0,0); gr.addColorStop(0,'rgba(0,0,0,0.35)'); gr.addColorStop(0.5,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(0,0,0,0.2)');
+  ctx.globalCompositeOperation='multiply'; ctx.fillStyle=gr; ctx.fillRect(0,0,W,H); ctx.globalCompositeOperation='source-over';
+  if(frame && frame.complete && frame.naturalWidth) ctx.drawImage(frame,0,0,W,H);
+  const hl=layoutText(head,KHAND,'700',W-100,148,parseFloat(95),40,1.05);
+  drawText(hl,W/2,(152-hl.h)/2,'center','#fff','#FFD600',{shadow:'rgba(0,0,0,.95)',shadowBlur:12,shadowY:4});
+  drawDate(W-40,155,38,'right','rgba(0,0,0,.75)','#fff','#FFD600');
+  if(body.length){ const bl=layoutText(body,ANEK,'700',W-120,200,55.88,34,1.25); drawText(bl,W/2,1090+(205-bl.h)/2,'center','#000','#c70100'); }
+ }};
+
+/* 1) ब्रेकिंग न्यूज़ - लाल/काला */
+TPL.breaking = { name:'ब्रेकिंग न्यूज़', tag:'BREAKING NEWS', body:true, hi:'#FFD600', bodyLabel:'नीचे की छोटी खबर (चाहें तो खाली):',
+ draw(g,head,body,tag){
+  const {W,H,wide}=g, pad=Math.round(W*0.045);
+  paintPhoto(0,0,W,H,null,{filter:'contrast(1.06) saturate(1.05)'});
+  const ph=wide?0.46:g.story?0.36:g.sq?0.47:0.42, py=H*(1-ph), fh=Math.round(W*0.058);
+  ctx.fillStyle=vgrad(py-H*0.2,py,[[0,'rgba(0,0,0,0)'],[1,'rgba(0,0,0,.88)']]); ctx.fillRect(0,py-H*0.2,W,H*0.2);
+  ctx.fillStyle=vgrad(py,H,[[0,'#101010'],[1,'#000']]); ctx.fillRect(0,py,W,H-py);
+  ctx.fillStyle='#d00000'; ctx.fillRect(0,py,W,Math.max(8,H*0.007));
+  const tagH=Math.round(W*0.062);
+  ctx.font='700 '+Math.round(tagH*0.62)+'px '+KHAND; const tw=ctx.measureText(tag).width;
+  const tx=pad, ty=py-tagH/2;
+  poly([[tx,ty],[tx+tw+tagH*1.35,ty],[tx+tw+tagH*1.35-tagH*0.3,ty+tagH],[tx,ty+tagH]]); ctx.fillStyle='#d00000'; ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(tx+tagH*0.5,ty+tagH/2,tagH*0.16,0,7); ctx.fill();
+  ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText(tag,tx+tagH*0.85,ty+tagH/2+tagH*0.05);
+  drawBrand(W-pad,pad*0.7,Math.round(W*0.052),'right');
+  const ay=ty+tagH+Math.round(H*0.012), ah=H-fh-ay-Math.round(H*0.014), aw=W-2*pad;
+  const hh=body.length?ah*0.64:ah;
+  const hl=layoutText(head,KHAND,'700',aw,hh,H*0.13,40,1.08);
+  drawText(hl,pad,ay,'left','#fff',this.hi);
+  if(body.length){ const by=ay+hl.h+H*0.012; const bl=layoutText(body,ANEK,'700',aw,ah-hl.h-H*0.012,Math.round(W*0.036),22,1.28); drawText(bl,pad,by,'left','#d1d5db','#FFB020'); }
+  ctx.fillStyle='#b00000'; ctx.fillRect(0,H-fh,W,fh);
+  footerText(pad,H-fh/2,'left','#fff',Math.round(fh*0.5),dateText());
+  footerText(W-pad,H-fh/2,'right','#fff',Math.round(fh*0.5),HANDLE);
+ }};
+
+/* 2) थंबनेल स्टाइल - बड़े पीले अक्षर */
+TPL.thumb = { name:'थंबनेल स्टाइल', tag:'', body:false, hi:'#FFD600', bodyLabel:'(इस डिज़ाइन में नीचे की खबर नहीं आती)', tagLabel:'बड़ा चौंकाने वाला शब्द (खाली छोड़ें तो अपने आप):', thumb:true,
+ draw(g,head,body,tag){
+  const {W,H,wide}=g, pad=Math.round(W*0.04);
+  paintPhoto(0,0,W,H,null,{filter:'contrast(1.12) saturate(1.15) brightness(1.03)'});
+  const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.25,W/2,H/2,Math.max(W,H)*0.75); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.6)');
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+  const bigH=H*(wide?0.40:g.story?0.20:g.sq?0.30:0.27), headH=H*(wide?0.34:g.story?0.19:g.sq?0.28:0.24);
+  ctx.fillStyle=vgrad(0,bigH*1.3,[[0,'rgba(0,0,0,.55)'],[1,'rgba(0,0,0,0)']]); ctx.fillRect(0,0,W,bigH*1.3);
+  ctx.fillStyle=vgrad(H-headH*1.5,H,[[0,'rgba(0,0,0,0)'],[1,'rgba(0,0,0,.85)']]); ctx.fillRect(0,H-headH*1.5,W,headH*1.5);
+  let word=(tag||'').trim();
+  if(!word){ const h=head.find(w=>w.hi)||head[0]; word=h?cleanWord(h.t):''; }
+  const bw=[{t:word,hi:false}];
+  const bl=layoutText(bw,KHAND,'700',W-2*pad,bigH,bigH*(wide?0.95:1.0),50,1.0);
+  drawText(bl,W/2,pad*0.7+(bigH-bl.h)/2,'center','#FFD600','#FFD600',{stroke:'#000',sw:bl.size*0.13,shadow:'rgba(0,0,0,.8)',shadowBlur:22,shadowY:8});
+  const hl=layoutText(head,KHAND,'700',W-2*pad,headH,H*0.1,34,1.06);
+  const hy=H-pad*2.2-headH+(headH-hl.h)/2;
+  drawText(hl,W/2,hy,'center','#fff','#FFD600',{stroke:'#000',sw:hl.size*0.11,shadow:'rgba(0,0,0,.7)',shadowBlur:14,shadowY:5});
+  // गोला और तीर
+  const ringOn=el('ringOn').checked, arrowOn=el('arrowOn').checked;
+  const rx=parseFloat(el('ringX').value)/100*W, ry=parseFloat(el('ringY').value)/100*H, R=Math.min(W,H)*0.13*parseFloat(el('ringS').value);
+  if(ringOn){
+    ctx.lineWidth=R*0.2; ctx.strokeStyle='#fff'; ctx.beginPath(); ctx.arc(rx,ry,R,0,7); ctx.stroke();
+    ctx.lineWidth=R*0.12; ctx.strokeStyle='#ff1a1a'; ctx.shadowColor='rgba(0,0,0,.6)'; ctx.shadowBlur=14; ctx.beginPath(); ctx.arc(rx,ry,R,0,7); ctx.stroke(); ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+  }
+  if(arrowOn){
+    const sx= rx<W/2? W*0.78 : W*0.22, sy=Math.max(H*0.42, Math.min(H*0.62, hy-H*0.05));
+    const tx=ringOn? rx+(sx-rx)*0.0 : rx, ty=ringOn? ry : ry;
+    let dx=tx-sx, dy=ty-sy; const d=Math.hypot(dx,dy)||1; dx/=d; dy/=d;
+    const ex=ringOn? tx-dx*(R*1.18) : tx, ey=ringOn? ty-dy*(R*1.18) : ty;
+    const aw=R*0.5;
+    ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+    [['#fff',R*0.34],['#ff1a1a',R*0.2]].forEach(([c,w])=>{ ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=w;
+      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex-dx*aw*0.6,ey-dy*aw*0.6); ctx.stroke();
+      const nx=-dy, ny=dx; ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(ex-dx*aw-nx*aw*0.7,ey-dy*aw-ny*aw*0.7); ctx.lineTo(ex-dx*aw+nx*aw*0.7,ey-dy*aw+ny*aw*0.7); ctx.closePath(); ctx.fill(); if(c==='#fff'){ ctx.stroke(); } });
+    ctx.restore();
+  }
+  drawDate(pad,H-pad-Math.round(W*0.036),Math.round(W*0.036),'left','rgba(0,0,0,.75)','#fff','#FFD600');
+  drawBrand(W-pad,H-pad-Math.round(W*0.042),Math.round(W*0.042),'right');
+ }};
+
+/* 3) क्लीन कार्ड - सफ़ेद/नीला/सुनहरा */
+TPL.clean = { name:'क्लीन कार्ड', tag:'ताज़ा खबर', body:true, hi:'#C27C00', bodyLabel:'नीचे की खबर:',
+ draw(g,head,body,tag){
+  const {W,H,wide}=g, pad=Math.round(W*0.05), blue='#0B3D91', navy='#0b2a5b', gold='#D4A017';
+  ctx.fillStyle='#f3f6fb'; ctx.fillRect(0,0,W,H);
+  const fh=Math.round(W*0.062);
+  if(!wide){
+    const photoH=H*(g.story?0.5:g.sq?0.54:0.55), r=Math.round(W*0.05);
+    paintPhoto(0,0,W,photoH+r,null,{filter:'contrast(1.05) saturate(1.05)'});
+    ctx.fillStyle='#fff'; rrect(0,photoH,W,H-photoH-fh+r,r); ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=24; ctx.shadowOffsetY=-6; ctx.fill(); ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.fillStyle='#fff'; ctx.fillRect(0,photoH+r,W,H-photoH-fh);
+    const tagH=Math.round(W*0.062);
+    drawPill(tag,pad,photoH-tagH/2,tagH,'left',blue,'#fff',gold,'800 '+Math.round(tagH*0.5)+'px '+ANEK);
+    drawBrand(W-pad,pad*0.7,Math.round(W*0.052),'right');
+    const ay=photoH+tagH/2+H*0.016, ah=H-fh-ay-H*0.016, aw=W-2*pad;
+    const hh=body.length?ah*0.62:ah;
+    const hl=layoutText(head,KHAND,'700',aw,hh,H*0.1,36,1.08); drawText(hl,pad,ay,'left',navy,this.hi);
+    if(body.length){ const by=ay+hl.h+H*0.012; const bl=layoutText(body,ANEK,'700',aw,ah-hl.h-H*0.012,Math.round(W*0.037),22,1.3); drawText(bl,pad,by,'left','#334155','#B45309'); }
+  } else {
+    const sx=W*0.55;
+    paintPhoto(0,0,sx+40,H,null,{filter:'contrast(1.05) saturate(1.05)'});
+    ctx.fillStyle='#fff'; ctx.fillRect(sx,0,W-sx,H-fh);
+    ctx.fillStyle=gold; ctx.fillRect(sx,0,8,H-fh);
+    const aw=W-sx-pad*1.6, ax=sx+pad*0.9;
+    const tagH=Math.round(H*0.075);
+    drawPill(tag,ax,pad*0.6,tagH,'left',blue,'#fff',gold,'800 '+Math.round(tagH*0.5)+'px '+ANEK);
+    const ay=pad*0.6+tagH+H*0.03, ah=H-fh-ay-pad*0.7;
+    const hh=body.length?ah*0.62:ah;
+    const hl=layoutText(head,KHAND,'700',aw,hh,H*0.14,32,1.08); drawText(hl,ax,ay,'left',navy,this.hi);
+    if(body.length){ const bl=layoutText(body,ANEK,'700',aw,ah-hl.h-H*0.02,Math.round(H*0.05),20,1.3); drawText(bl,ax,ay+hl.h+H*0.02,'left','#334155','#B45309'); }
+    drawBrand(sx-pad*0.4,pad*0.5,Math.round(H*0.075),'right');
+  }
+  ctx.fillStyle=blue; ctx.fillRect(0,H-fh,W,fh); ctx.fillStyle=gold; ctx.fillRect(0,H-fh,W,Math.max(4,fh*0.09));
+  footerText(pad,H-fh/2+2,'left','#fff',Math.round(fh*0.5),dateText());
+  footerText(W-pad,H-fh/2+2,'right','#ffe9a3',Math.round(fh*0.5),HANDLE);
+ }};
+
+/* 4) अलर्ट / क्राइम - पीली चेतावनी पट्टी */
+function tape(cx,cy,ang,len,h,text){
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(ang*Math.PI/180);
+  ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=14; ctx.shadowOffsetY=5;
+  ctx.fillStyle='#FFD600'; ctx.fillRect(-len/2,-h/2,len,h); ctx.shadowColor='transparent';
+  ctx.fillStyle='#000'; ctx.fillRect(-len/2,-h/2,len,h*0.08); ctx.fillRect(-len/2,h/2-h*0.08,len,h*0.08);
+  ctx.font='700 '+Math.round(h*0.62)+'px '+KHAND; ctx.textBaseline='middle'; ctx.textAlign='left';
+  const unit=text+'   •   '; const uw=ctx.measureText(unit).width; let x=-len/2+10;
+  while(x<len/2){ ctx.fillText(unit,x,0+h*0.04); x+=uw; }
+  ctx.restore();
+}
+TPL.alert = { name:'अलर्ट / क्राइम', tag:'ALERT', body:true, hi:'#FFD600', bodyLabel:'नीचे की खबर:',
+ draw(g,head,body,tag){
+  const {W,H,wide}=g, pad=Math.round(W*0.045);
+  paintPhoto(0,0,W,H,null,{filter:'contrast(1.1) saturate(0.9)'});
+  ctx.fillStyle='rgba(110,0,0,.30)'; ctx.fillRect(0,0,W,H);
+  const ph=wide?0.46:g.story?0.37:g.sq?0.48:0.43, py=H*(1-ph), fh=Math.round(W*0.058);
+  ctx.fillStyle=vgrad(py-H*0.15,py,[[0,'rgba(40,0,0,0)'],[1,'rgba(40,0,0,.9)']]); ctx.fillRect(0,py-H*0.15,W,H*0.15);
+  ctx.fillStyle=vgrad(py,H,[[0,'#5a0000'],[1,'#1c0000']]); ctx.fillRect(0,py,W,H-py);
+  const th=Math.round(W*0.05);
+  tape(W/2,H*(wide?0.13:0.085),-3.2,W*1.3,th,'POLICE LINE   •   सावधान   •   ALERT');
+  tape(W/2,py,2.2,W*1.3,th,'ALERT   •   POLICE LINE   •   सावधान');
+  const tagH=Math.round(W*0.058), tagY=H*(wide?0.13:0.085)+th+H*0.02;
+  const pill=drawPill(tag,pad+tagH*0.9,tagY,tagH,'left','#8b0000','#FFD600','#FFD600','800 '+Math.round(tagH*0.5)+'px '+ANEK);
+  // चेतावनी त्रिकोण
+  const tx=pad+tagH*0.5, ty=tagY+tagH/2; ctx.fillStyle='#FFD600'; poly([[tx,ty-tagH*0.5],[tx+tagH*0.55,ty+tagH*0.42],[tx-tagH*0.55,ty+tagH*0.42]]); ctx.fill();
+  ctx.fillStyle='#000'; ctx.font='800 '+Math.round(tagH*0.55)+'px '+ANEK; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('!',tx,ty+tagH*0.12);
+  drawBrand(W-pad,tagY+(tagH-Math.round(W*0.045))/2,Math.round(W*0.045),'right');
+  const ay=py+th/2+H*0.02, ah=H-fh-ay-H*0.014, aw=W-2*pad, hh=body.length?ah*0.6:ah;
+  const hl=layoutText(head,KHAND,'700',aw,hh,H*0.12,36,1.08); drawText(hl,pad,ay,'left','#fff',this.hi,{shadow:'rgba(0,0,0,.6)',shadowBlur:8,shadowY:3});
+  if(body.length){ const bl=layoutText(body,ANEK,'700',aw,ah-hl.h-H*0.01,Math.round(W*0.036),22,1.28); drawText(bl,pad,ay+hl.h+H*0.01,'left','#ffd9d9','#FFE066'); }
+  ctx.fillStyle='#000'; ctx.fillRect(0,H-fh,W,fh); ctx.fillStyle='#FFD600'; ctx.fillRect(0,H-fh,W,Math.max(4,fh*0.08));
+  footerText(pad,H-fh/2+2,'left','#FFD600',Math.round(fh*0.5),dateText());
+  footerText(W-pad,H-fh/2+2,'right','#fff',Math.round(fh*0.5),HANDLE);
+ }};
+
+/* 5) बधाई / उपलब्धि - सुनहरा और हरा */
+TPL.congrats = { name:'बधाई / उपलब्धि', tag:'बधाई', body:true, hi:'#FFD54A', bodyLabel:'नीचे की खबर:',
+ draw(g,head,body,tag){
+  const {W,H,wide}=g, pad=Math.round(W*0.06);
+  const bg=ctx.createRadialGradient(W*(wide?0.3:0.5),H*0.35,10,W/2,H/2,Math.max(W,H)*0.85); bg.addColorStop(0,'#0f7a5a'); bg.addColorStop(0.55,'#06402f'); bg.addColorStop(1,'#021f17');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+  // सुनहरी किरणें
+  ctx.save(); ctx.translate(wide?W*0.27:W/2, wide?H/2:H*0.3); ctx.globalAlpha=0.07; ctx.fillStyle='#ffe28a';
+  for(let i=0;i<18;i++){ ctx.rotate(Math.PI/9); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.max(W,H),-Math.max(W,H)*0.07); ctx.lineTo(Math.max(W,H),Math.max(W,H)*0.07); ctx.closePath(); ctx.fill(); }
+  ctx.restore();
+  // कॉन्फ़ेटी (हर बार एक जैसी)
+  const r=rng(77); const cols=['#F6D46B','#E6B422','#ffffff','#7be0b3'];
+  for(let i=0;i<70;i++){ const x=r()*W, y=r()*H, s=6+r()*12; ctx.save(); ctx.translate(x,y); ctx.rotate(r()*6); ctx.globalAlpha=0.45+r()*0.45; ctx.fillStyle=cols[Math.floor(r()*cols.length)];
+    if(r()>0.5) ctx.fillRect(-s/2,-s/4,s,s/2); else { ctx.beginPath(); ctx.arc(0,0,s/3,0,7); ctx.fill(); } ctx.restore(); }
+  // सुनहरा दोहरा बॉर्डर
+  ctx.strokeStyle='#E6B422'; ctx.lineWidth=5; ctx.strokeRect(22,22,W-44,H-44); ctx.strokeStyle='rgba(246,212,107,.7)'; ctx.lineWidth=2; ctx.strokeRect(36,36,W-72,H-72);
+  let D, cx, cy, tx, ty, tw, th;
+  if(wide){ D=H*0.64; cx=W*0.27; cy=H*0.45; tx=W*0.52; tw=W*0.42; ty=H*0.1; th=H*0.74; }
+  else { D=W*(g.story?0.74:g.sq?0.48:0.6); cx=W/2; cy=H*(g.story?0.075:g.sq?0.07:0.075)+D/2+H*0.02; tx=pad; tw=W-2*pad; ty=cy+D/2+H*0.07; th=H-ty-H*0.1; }
+  // फ़ोटो गोले में
+  ctx.save(); ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=30; ctx.shadowOffsetY=10; ctx.fillStyle='#E6B422'; ctx.beginPath(); ctx.arc(cx,cy,D/2+D*0.035,0,7); ctx.fill(); ctx.restore();
+  const gg=ctx.createLinearGradient(cx-D/2,cy-D/2,cx+D/2,cy+D/2); gg.addColorStop(0,'#fff1b8'); gg.addColorStop(0.5,'#E6B422'); gg.addColorStop(1,'#a9780c');
+  ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(cx,cy,D/2+D*0.035,0,7); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(cx,cy,D/2+D*0.008,0,7); ctx.fill();
+  paintPhoto(cx-D/2,cy-D/2,D,D,()=>{ ctx.beginPath(); ctx.arc(cx,cy,D/2,0,7); },{filter:'contrast(1.05) saturate(1.08)'});
+  // रिबन में टैग
+  const bh=Math.round(W*0.085), bwid=Math.min(W*0.5, 360+tag.length*26), by=cy+D/2+D*0.035-bh*0.35, bx=cx-bwid/2;
+  const rb=ctx.createLinearGradient(0,by,0,by+bh); rb.addColorStop(0,'#fff1b8'); rb.addColorStop(0.5,'#E6B422'); rb.addColorStop(1,'#b8860b');
+  ctx.fillStyle='#a9780c'; poly([[bx-bh*0.55,by+bh*0.2],[bx+bh*0.2,by+bh*0.2],[bx+bh*0.2,by+bh*1.1],[bx-bh*0.55,by+bh*1.1],[bx-bh*0.2,by+bh*0.65]]); ctx.fill();
+  poly([[bx+bwid+bh*0.55,by+bh*0.2],[bx+bwid-bh*0.2,by+bh*0.2],[bx+bwid-bh*0.2,by+bh*1.1],[bx+bwid+bh*0.55,by+bh*1.1],[bx+bwid+bh*0.2,by+bh*0.65]]); ctx.fill();
+  ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=12; ctx.shadowOffsetY=4; ctx.fillStyle=rb; ctx.fillRect(bx,by,bwid,bh); ctx.shadowColor='transparent';
+  ctx.fillStyle='#06402f'; ctx.font='800 '+Math.round(bh*0.58)+'px '+ANEK; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(tag,cx,by+bh/2+bh*0.04);
+  // टेक्स्ट
+  const ay = wide? ty : by+bh+H*0.025, ah = wide? th : H-ay-H*0.1, hh=body.length?ah*0.58:ah;
+  const hl=layoutText(head,KHAND,'700',tw,hh,H*(wide?0.17:0.095),34,1.1);
+  const align=wide?'left':'center', ax=wide?tx:W/2;
+  drawText(hl,ax,ay,align,'#ffffff',this.hi,{shadow:'rgba(0,0,0,.5)',shadowBlur:8,shadowY:3});
+  if(body.length){ const bl=layoutText(body,ANEK,'700',tw,ah-hl.h-H*0.015,Math.round(Math.min(W,H*1.2)*0.036),20,1.3); drawText(bl,ax,ay+hl.h+H*0.015,align,'#d1fae5','#FFD54A'); }
+  drawDate(wide?tx:pad*0.7+26,H-pad*0.75-Math.round(W*0.036)-14,Math.round(W*0.036),'left','rgba(0,0,0,.45)','#fff','#E6B422');
+  footerText(W-pad*0.7-26,H-pad*0.75-14-Math.round(W*0.018),'right','#F6D46B',Math.round(W*0.03),HANDLE);
+  drawBrand(pad*0.7+26,pad*0.7+26,Math.round(W*0.045),'left');
+ }};
+
+/* 6) दो-भाग वाला कार्ड - आधी फ़ोटो आधा टेक्स्ट */
+TPL.split = { name:'दो-भाग कार्ड', tag:'ताज़ा खबर', body:true, hi:'#FFD600', bodyLabel:'नीचे की खबर:',
+ draw(g,head,body,tag){
+  const {W,H}=g, pad=Math.round(W*0.05), vertical=(g.sq||g.wide);   // vertical = बाएँ फ़ोटो, दाएँ टेक्स्ट
+  ctx.fillStyle=vgrad(0,H,[[0,'#0b1b3a'],[1,'#0d2a5e']]); ctx.fillRect(0,0,W,H);
+  let ax,ay,aw,ah, slant;
+  if(vertical){
+    const sx=W*(g.wide?0.5:0.46); slant=W*0.04;
+    paintPhoto(0,0,sx+slant,H,()=>poly([[0,0],[sx+slant,0],[sx-slant,H],[0,H]]),{filter:'contrast(1.05) saturate(1.05)'});
+    ctx.fillStyle='#FFD600'; poly([[sx+slant,0],[sx+slant+W*0.018,0],[sx-slant+W*0.018,H],[sx-slant,H]]); ctx.fill();
+    ax=sx+slant+pad*0.7; aw=W-ax-pad*0.8; ay=H*0.14; ah=H*0.66;
+    drawPill(tag,ax,H*0.045,Math.round(Math.min(W,H*1.4)*0.06),'left','#FFD600','#111','','800 '+Math.round(Math.min(W,H*1.4)*0.032)+'px '+ANEK);
+    drawBrand(pad*0.6,pad*0.6,Math.round(Math.min(W,H*1.4)*0.05),'left');
+  } else {
+    const sy=H*(g.story?0.5:0.52); slant=H*0.03;
+    paintPhoto(0,0,W,sy+slant,()=>poly([[0,0],[W,0],[W,sy-slant],[0,sy+slant]]),{filter:'contrast(1.05) saturate(1.05)'});
+    ctx.fillStyle='#FFD600'; poly([[0,sy+slant],[W,sy-slant],[W,sy-slant+H*0.011],[0,sy+slant+H*0.011]]); ctx.fill();
+    ax=pad; aw=W-2*pad; ay=sy+slant+H*0.035; ah=H-ay-H*0.1;
+    drawPill(tag,pad,sy-slant-H*0.015,Math.round(W*0.06),'left','#FFD600','#111','','800 '+Math.round(W*0.032)+'px '+ANEK);
+    drawBrand(W-pad,pad*0.7,Math.round(W*0.052),'right');
+  }
+  const hh=body.length?ah*0.62:ah;
+  const hl=layoutText(head,KHAND,'700',aw,hh,H*(vertical?0.12:0.095),30,1.08); drawText(hl,ax,ay,'left','#fff',this.hi);
+  if(body.length){ const bl=layoutText(body,ANEK,'700',aw,ah-hl.h-H*0.014,Math.round(Math.min(W,H*1.3)*0.034),20,1.3); drawText(bl,ax,ay+hl.h+H*0.014,'left','#cbd5e1','#fbbf24'); }
+  const fy=H-Math.round(H*0.045);
+  drawDate(ax,fy-Math.round(Math.min(W,H*1.3)*0.017)-8,Math.round(Math.min(W,H*1.3)*0.04),'left','rgba(0,0,0,.4)','#fff','#FFD600');
+  footerText(vertical?W-pad*0.8:W-pad,fy,'right','#FFD600',Math.round(Math.min(W,H*1.3)*0.03),HANDLE);
+ }};
+
+/* ---------------- मुख्य रेंडर ---------------- */
+let rafId=0;
+function render(){ cancelAnimationFrame(rafId); rafId=requestAnimationFrame(doRender); }
+function doRender(){
+  const t=TPL[S.tpl]; let f=FMTS[S.fmt];
+  if(t.fmts && !t.fmts.includes(S.fmt)){ S.fmt=t.fmts[0]; f=FMTS[S.fmt]; buildButtons(); }
+  if(cv.width!==f.W||cv.height!==f.H){ cv.width=f.W; cv.height=f.H; }
+  setToday(false);
+  const g={W:f.W,H:f.H,wide:f.W>f.H,story:f.H/f.W>1.6,sq:f.W===f.H};
+  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,f.W,f.H); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; ctx.filter='none';
+  const head=colorWords(el('headInp').value,2,7919);
+  const body=t.body? colorWords(el('bodyInp').value,3,104729) : [];
+  const tag=(el('tagInp').value.trim())||t.tag||'';
+  t.draw(g,head,body,tag);
+  // लेबल और कंट्रोल बदलना
+  el('bodyLbl').textContent=t.bodyLabel||'नीचे की खबर:';
+  el('bodyInp').disabled=!t.body; el('bodyInp').style.opacity=t.body?1:0.4;
+  el('tagLbl').textContent=t.tagLabel||'टैग (खाली छोड़ें तो अपने आप):';
+  el('tagInp').placeholder=t.tag===null?'(इस डिज़ाइन में नहीं आता)':(t.tag||'जैसे: चौंकाने वाला शब्द');
+  el('tagInp').disabled=t.tag===null; el('tagInp').style.opacity=t.tag===null?0.4:1;
+  el('thumbCtl').classList.toggle('hide',!t.thumb);
+  fitPreview();
+}
+function fitPreview(){
+  const wide=cv.width>cv.height;
+  const target = window.innerWidth<=860 ? Math.min(window.innerWidth-28, wide?700:520) : (wide?720:520);
+  cv.style.width=target+'px';
+}
+
+/* ---------------- बटन, फ़ोटो, लोगो, तारीख ---------------- */
+function buildButtons(){
+  const tg=el('tplGrid'); tg.innerHTML='';
+  Object.keys(TPL).forEach(k=>{ const b=document.createElement('button'); b.className='opt'+(S.tpl===k?' on':''); b.textContent=TPL[k].name; b.onclick=()=>{ S.tpl=k; buildButtons(); render(); }; tg.appendChild(b); });
+  const fg=el('fmtGrid'); fg.innerHTML='';
+  Object.keys(FMTS).forEach(k=>{ const b=document.createElement('button'); b.className='opt'+(S.fmt===k?' on':''); b.textContent=FMTS[k].name;
+    const t=TPL[S.tpl]; if(t.fmts && !t.fmts.includes(k)){ b.style.opacity=.35; }
+    b.onclick=()=>{ const t=TPL[S.tpl]; if(t.fmts && !t.fmts.includes(k)){ alert('"'+t.name+'" सिर्फ़ 4:5 पोस्ट में बनता है।'); return; } S.fmt=k; buildButtons(); render(); }; fg.appendChild(b); });
+}
+function setToday(force){
+  const d=el('dateInp'); if(d.value && !force) return;
+  const t=new Date(), p=n=>String(n).padStart(2,'0'); d.value=t.getFullYear()+'-'+p(t.getMonth()+1)+'-'+p(t.getDate());
+}
+function loadPhoto(){
+  const f=el('imageLoader').files[0]; if(!f) return;
+  const img=new Image();
+  img.onload=()=>{ photo=img; el('zoom').value=1; el('offX').value=0; el('offY').value=0; render(); };
+  img.onerror=()=>alert('यह फ़ोटो खुल नहीं पाई, कोई और फ़ोटो चुनें।');
+  img.src=URL.createObjectURL(f);
+}
+function loadLogo(){
+  const f=el('logoLoader').files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=e=>{ const img=new Image(); img.onload=()=>{ logo=img; try{ localStorage.setItem('pn_logo',e.target.result); }catch(x){} render(); }; img.src=e.target.result; };
+  rd.readAsDataURL(f);
+}
+function clearLogo(){ logo=null; try{ localStorage.removeItem('pn_logo'); }catch(x){} render(); }
+function reshuffle(){ S.seed+=1; render(); }
+
+async function download(){
+  const btn=el('saveBtn'), old=btn.textContent; btn.textContent='सेव हो रहा है...';
+  try{
+    await document.fonts.ready; doRender();
+    const blob=await new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error('blob')),'image/png'));
+    const t=new Date(), p=n=>String(n).padStart(2,'0');
+    const name='PravinNews_'+S.tpl+'_'+S.fmt+'_'+t.getFullYear()+p(t.getMonth()+1)+p(t.getDate())+'_'+p(t.getHours())+p(t.getMinutes())+'.png';
+    const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),5000);
+    setToday(true);                         // डाउनलोड के बाद तारीख अपने आप आज की हो जाए
+  }catch(err){
+    console.error(err);
+    alert('पोस्टर सेव नहीं हो पाया। (क्लासिक डिज़ाइन में frame.png/इंटरनेट जाँचिए) फिर कोशिश कीजिए।');
+  }finally{ btn.textContent=old; render(); }
+}
+
+/* ---------------- शुरुआत ---------------- */
+frame=new Image(); frame.crossOrigin='anonymous';
+frame.onerror=function(){ frame.onerror=null; frame.src='https://i.postimg.cc/GmkN6q4B/New-Project-(2).png'; };
+frame.onload=()=>render(); frame.src='frame.png';
+try{ const saved=localStorage.getItem('pn_logo'); if(saved){ const im=new Image(); im.onload=()=>{ logo=im; render(); }; im.src=saved; } }catch(x){}
+
+window.onload=function(){
+  setToday(false); buildButtons(); render();
+  if(document.fonts && document.fonts.load){
+    Promise.all([
+      document.fonts.load('700 60px Khand','अआकAB'), document.fonts.load('600 60px Khand','अआकAB'),
+      document.fonts.load('700 40px "Anek Devanagari"','अआकAB'), document.fonts.load('800 40px "Anek Devanagari"','अआकAB')
+    ]).catch(()=>{}).then(()=>render());
+  }
+};
+window.onresize=fitPreview;
 </script>
 </body>
 </html>
