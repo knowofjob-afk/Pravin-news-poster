@@ -10,7 +10,7 @@
 body { font-family: 'Anek Devanagari', sans-serif; background:#0f172a; color:#fff; margin:0; padding:14px; min-height:100vh; }
 .main { display:flex; gap:30px; justify-content:center; align-items:flex-start; max-width:1300px; margin:0 auto; }
 .preview { flex-shrink:0; position:sticky; top:14px; }
-#cv { display:block; background:#000; box-shadow:0 18px 45px rgba(0,0,0,.8); max-width:100%; height:auto; }
+#cv { display:block; background:#888 repeating-conic-gradient(#aaa 0% 25%, #777 0% 50%) 50% / 28px 28px; box-shadow:0 18px 45px rgba(0,0,0,.8); max-width:100%; height:auto; }
 .editor { background:#1e293b; padding:16px; border-radius:12px; width:100%; max-width:500px; border:1px solid #334155; }
 .box { background:#0f172a; padding:10px 12px; border-radius:8px; margin-bottom:12px; }
 label { font-size:13px; color:#FFD600; display:block; margin-bottom:6px; font-weight:700; }
@@ -53,21 +53,14 @@ button.act { width:100%; padding:12px; border-radius:6px; border:none; font-weig
     <div class="box">
       <label>4. फ़ोटो और अलाइनमेंट:</label>
       <input type="file" id="imageLoader" accept="image/*" onchange="loadPhoto()">
+      <div class="sub" style="margin-bottom:8px">फ़ोटो न डालें तो फ़ोटो वाला हिस्सा पारदर्शी रहेगा (ओवरले / जैकेट PNG)। टैग, लोगो और टेक्स्ट बने रहेंगे।</div>
+      <button class="act gray" style="margin-bottom:8px" onclick="removePhoto()">फ़ोटो हटाएँ (पारदर्शी करें)</button>
       <div class="row">
         <div><div class="sub">ज़ूम</div><input type="range" id="zoom" min="0.5" max="3" step="0.01" value="1" oninput="render()"></div>
         <div><div class="sub">दाएँ/बाएँ</div><input type="range" id="offX" min="-100" max="100" value="0" oninput="render()"></div>
         <div><div class="sub">ऊपर/नीचे</div><input type="range" id="offY" min="-100" max="100" value="0" oninput="render()"></div>
       </div>
       <div id="themeCtl" class="hide"><div class="sub">बैकग्राउंड का रंग</div><div class="grid" id="themeGrid"></div></div>
-      <div id="thumbCtl" class="hide">
-        <div class="chk"><input type="checkbox" id="ringOn" checked onchange="render()"> लाल गोला</div>
-        <div class="chk"><input type="checkbox" id="arrowOn" checked onchange="render()"> तीर</div>
-        <div class="row">
-          <div><div class="sub">गोला दाएँ/बाएँ</div><input type="range" id="ringX" min="5" max="95" value="62" oninput="render()"></div>
-          <div><div class="sub">गोला ऊपर/नीचे</div><input type="range" id="ringY" min="10" max="90" value="52" oninput="render()"></div>
-          <div><div class="sub">गोला साइज़</div><input type="range" id="ringS" min="0.5" max="2" step="0.05" value="1" oninput="render()"></div>
-        </div>
-      </div>
     </div>
     <div class="box">
       <label>5. खबर की तारीख:</label>
@@ -221,13 +214,13 @@ function vgrad(y0,y1,stops){ const g=ctx.createLinearGradient(0,y0,0,y1); stops.
 // फ़ोटो को किसी भी आकार (path) में भरता है। हल्का धुंधला बैकग्राउंड भी देता है।
 function paintPhoto(x,y,w,h,pathFn,opts){
   opts=opts||{};
+  if(!photo){            // फ़ोटो नहीं है: उस हिस्से को पूरी तरह पारदर्शी (खाली) कर दो
+    ctx.save(); ctx.globalCompositeOperation='destination-out'; ctx.fillStyle='#000';
+    if(pathFn){ pathFn(); ctx.fill(); } else ctx.fillRect(x,y,w,h);
+    ctx.restore(); return;
+  }
   ctx.save();
   if(pathFn){ pathFn(); ctx.clip(); } else { ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip(); }
-  if(!photo){
-    ctx.fillStyle=vgrad(y,y+h,[[0,'#334155'],[1,'#0f172a']]); ctx.fillRect(x,y,w,h);
-    ctx.fillStyle='#94a3b8'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.font='700 '+Math.round(Math.min(w,h)*0.07)+'px '+ANEK; ctx.fillText('न्यूज़ फ़ोटो चुनें', x+w/2, y+h/2); ctx.restore(); return;
-  }
   const pw=photo.width, ph=photo.height;
   // 1) धुंधला बैकग्राउंड
   const cs=Math.max(w/pw,h/ph), bw=pw*cs, bh=ph*cs;
@@ -376,8 +369,8 @@ TPL.classic = { name:'क्लासिक (आपका फ्रेम)', fmt
  draw(g,head,body){
   const {W,H}=g;
   paintPhoto(0,0,W,H,null,{base:'width',cy:H*0.45,filter:'contrast(1.08) brightness(1.03) saturate(1.06)'});
-  const gr=ctx.createLinearGradient(0,H,0,0); gr.addColorStop(0,'rgba(0,0,0,0.35)'); gr.addColorStop(0.5,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(0,0,0,0.2)');
-  ctx.globalCompositeOperation='multiply'; ctx.fillStyle=gr; ctx.fillRect(0,0,W,H); ctx.globalCompositeOperation='source-over';
+  if(photo){ const gr=ctx.createLinearGradient(0,H,0,0); gr.addColorStop(0,'rgba(0,0,0,0.35)'); gr.addColorStop(0.5,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(0,0,0,0.2)');
+    ctx.globalCompositeOperation='multiply'; ctx.fillStyle=gr; ctx.fillRect(0,0,W,H); ctx.globalCompositeOperation='source-over'; }
   if(frame && frame.complete && frame.naturalWidth) ctx.drawImage(frame,0,0,W,H);
   const hl=layoutText(head,KHAND,'700',W-100,148,parseFloat(95),40,1.05);
   drawText(hl,W/2,(152-hl.h)/2,'center','#fff','#FFD600',{shadow:'rgba(0,0,0,.95)',shadowBlur:12,shadowY:4});
@@ -391,7 +384,7 @@ TPL.breaking = { name:'ब्रेकिंग न्यूज़', tag:'BREAKI
   const {W,H,wide}=g, pad=Math.round(W*0.045);
   paintPhoto(0,0,W,H,null,{filter:'contrast(1.06) saturate(1.05)'});
   const ph=wide?0.46:g.story?0.36:g.sq?0.47:0.42, py=H*(1-ph), fh=Math.round(W*0.058);
-  ctx.fillStyle=vgrad(py-H*0.2,py,[[0,'rgba(0,0,0,0)'],[1,'rgba(0,0,0,.88)']]); ctx.fillRect(0,py-H*0.2,W,H*0.2);
+  if(photo){ ctx.fillStyle=vgrad(py-H*0.2,py,[[0,'rgba(0,0,0,0)'],[1,'rgba(0,0,0,.88)']]); ctx.fillRect(0,py-H*0.2,W,H*0.2); }
   ctx.fillStyle=vgrad(py,H,[[0,'#101010'],[1,'#000']]); ctx.fillRect(0,py,W,H-py);
   ctx.fillStyle='#d00000'; ctx.fillRect(0,py,W,Math.max(8,H*0.007));
   const tagH=Math.round(W*0.062);
@@ -410,47 +403,6 @@ TPL.breaking = { name:'ब्रेकिंग न्यूज़', tag:'BREAKI
   footerRow(pad,W-pad,H-fh/2,fh,'#fff','#fff','#ffd6d6');
  }};
 
-/* 2) थंबनेल स्टाइल - बड़े पीले अक्षर */
-TPL.thumb = { name:'थंबनेल स्टाइल', tag:'', body:false, hi:'#FFD600', bodyLabel:'(इस डिज़ाइन में नीचे की खबर नहीं आती)', tagLabel:'बड़ा चौंकाने वाला शब्द (खाली छोड़ें तो अपने आप):', thumb:true,
- draw(g,head,body,tag){
-  const {W,H,wide}=g, pad=Math.round(W*0.04);
-  paintPhoto(0,0,W,H,null,{filter:'contrast(1.12) saturate(1.15) brightness(1.03)'});
-  const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.25,W/2,H/2,Math.max(W,H)*0.75); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.6)');
-  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
-  const bigH=H*(wide?0.40:g.story?0.20:g.sq?0.30:0.27), headH=H*(wide?0.34:g.story?0.19:g.sq?0.28:0.24);
-  ctx.fillStyle=vgrad(0,bigH*1.3,[[0,'rgba(0,0,0,.55)'],[1,'rgba(0,0,0,0)']]); ctx.fillRect(0,0,W,bigH*1.3);
-  ctx.fillStyle=vgrad(H-headH*1.5,H,[[0,'rgba(0,0,0,0)'],[1,'rgba(0,0,0,.85)']]); ctx.fillRect(0,H-headH*1.5,W,headH*1.5);
-  let word=(tag||'').trim();
-  if(!word){ const h=head.find(w=>w.hi)||head[0]; word=h?cleanWord(h.t):''; }
-  const bw=[{t:word,hi:false}];
-  const bl=layoutText(bw,KHAND,'700',W-2*pad,bigH,bigH*(wide?0.95:1.0),50,1.0);
-  drawText(bl,W/2,pad*0.7+(bigH-bl.h)/2,'center','#FFD600','#FFD600',{stroke:'#000',sw:bl.size*0.13,shadow:'rgba(0,0,0,.8)',shadowBlur:22,shadowY:8});
-  const hl=layoutText(head,KHAND,'700',W-2*pad,headH,H*0.1,34,1.06);
-  const hy=H-pad*2.2-headH+(headH-hl.h)/2;
-  drawText(hl,W/2,hy,'center','#fff','#FFD600',{stroke:'#000',sw:hl.size*0.11,shadow:'rgba(0,0,0,.7)',shadowBlur:14,shadowY:5});
-  // गोला और तीर
-  const ringOn=el('ringOn').checked, arrowOn=el('arrowOn').checked;
-  const R=Math.min(W,H)*0.13*parseFloat(el('ringS').value), rx=parseFloat(el('ringX').value)/100*W, ry=Math.min(parseFloat(el('ringY').value)/100*H, hy-R*1.3);   // गोला हेडलाइन पर न चढ़े
-  if(ringOn){
-    ctx.lineWidth=R*0.2; ctx.strokeStyle='#fff'; ctx.beginPath(); ctx.arc(rx,ry,R,0,7); ctx.stroke();
-    ctx.lineWidth=R*0.12; ctx.strokeStyle='#ff1a1a'; ctx.shadowColor='rgba(0,0,0,.6)'; ctx.shadowBlur=14; ctx.beginPath(); ctx.arc(rx,ry,R,0,7); ctx.stroke(); ctx.shadowColor='transparent'; ctx.shadowBlur=0;
-  }
-  if(arrowOn){
-    const sx= rx<W/2? W*0.78 : W*0.22, sy=Math.max(H*0.42, Math.min(H*0.62, hy-H*0.05));
-    const tx=ringOn? rx+(sx-rx)*0.0 : rx, ty=ringOn? ry : ry;
-    let dx=tx-sx, dy=ty-sy; const d=Math.hypot(dx,dy)||1; dx/=d; dy/=d;
-    const ex=ringOn? tx-dx*(R*1.18) : tx, ey=ringOn? ty-dy*(R*1.18) : ty;
-    const aw=R*0.5;
-    ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
-    [['#fff',R*0.34],['#ff1a1a',R*0.2]].forEach(([c,w])=>{ ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=w;
-      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex-dx*aw*0.6,ey-dy*aw*0.6); ctx.stroke();
-      const nx=-dy, ny=dx; ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(ex-dx*aw-nx*aw*0.7,ey-dy*aw-ny*aw*0.7); ctx.lineTo(ex-dx*aw+nx*aw*0.7,ey-dy*aw+ny*aw*0.7); ctx.closePath(); ctx.fill(); if(c==='#fff'){ ctx.stroke(); } });
-    ctx.restore();
-  }
-  drawDate(pad,H-pad-Math.round(W*0.036),Math.round(W*0.036),'left','rgba(0,0,0,.75)','#fff','#FFD600');
-  followRow(W-pad,H-pad-Math.round(W*0.02),Math.round(W*0.04),'#fff','#fff7c2',W*0.62);
- }};
-
 /* 3) क्लीन कार्ड - सफ़ेद/नीला/सुनहरा */
 TPL.clean = { name:'क्लीन कार्ड', tag:'ताज़ा खबर', body:true, hi:'#C27C00', bodyLabel:'नीचे की खबर:',
  draw(g,head,body,tag){
@@ -460,7 +412,7 @@ TPL.clean = { name:'क्लीन कार्ड', tag:'ताज़ा ख�
   if(!wide){
     const photoH=H*(g.story?0.5:g.sq?0.54:0.55), r=Math.round(W*0.05);
     paintPhoto(0,0,W,photoH+r,null,{filter:'contrast(1.05) saturate(1.05)'});
-    ctx.fillStyle='#fff'; rrect(0,photoH,W,H-photoH-fh+r,r); ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=24; ctx.shadowOffsetY=-6; ctx.fill(); ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.fillStyle='#fff'; rrect(0,photoH,W,H-photoH-fh+r,r); if(photo){ ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=24; ctx.shadowOffsetY=-6; } ctx.fill(); ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
     ctx.fillStyle='#fff'; ctx.fillRect(0,photoH+r,W,H-photoH-fh);
     const tagH=Math.round(W*0.062);
     drawPill(tag,pad,photoH-tagH/2,tagH,'left',blue,'#fff',gold,'800 '+Math.round(tagH*0.5)+'px '+ANEK);
@@ -487,119 +439,49 @@ TPL.clean = { name:'क्लीन कार्ड', tag:'ताज़ा ख�
   footerRow(pad,W-pad,H-fh/2+2,fh,'#fff','#ffe9a3','#c9d6ee');
  }};
 
-/* 4) अलर्ट / क्राइम - पीली चेतावनी पट्टी */
-function tape(cx,cy,ang,len,h,text){
-  ctx.save(); ctx.translate(cx,cy); ctx.rotate(ang*Math.PI/180);
-  ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=14; ctx.shadowOffsetY=5;
-  ctx.fillStyle='#FFD600'; ctx.fillRect(-len/2,-h/2,len,h); ctx.shadowColor='transparent';
-  ctx.fillStyle='#000'; ctx.fillRect(-len/2,-h/2,len,h*0.08); ctx.fillRect(-len/2,h/2-h*0.08,len,h*0.08);
-  ctx.font='700 '+Math.round(h*0.62)+'px '+KHAND; ctx.textBaseline='middle'; ctx.textAlign='left';
-  const unit=text+'   •   '; const uw=ctx.measureText(unit).width; let x=-len/2+10;
-  while(x<len/2){ ctx.fillText(unit,x,0+h*0.04); x+=uw; }
-  ctx.restore();
-}
-TPL.alert = { name:'अलर्ट / क्राइम', tag:'ALERT', body:true, hi:'#FFD600', bodyLabel:'नीचे की खबर:',
- draw(g,head,body,tag){
-  const {W,H,wide}=g, pad=Math.round(W*0.045);
-  paintPhoto(0,0,W,H,null,{filter:'contrast(1.1) saturate(0.9)'});
-  ctx.fillStyle='rgba(110,0,0,.30)'; ctx.fillRect(0,0,W,H);
-  const ph=wide?0.46:g.story?0.37:g.sq?0.48:0.43, py=H*(1-ph), fh=Math.round(W*0.058);
-  ctx.fillStyle=vgrad(py-H*0.15,py,[[0,'rgba(40,0,0,0)'],[1,'rgba(40,0,0,.9)']]); ctx.fillRect(0,py-H*0.15,W,H*0.15);
-  ctx.fillStyle=vgrad(py,H,[[0,'#5a0000'],[1,'#1c0000']]); ctx.fillRect(0,py,W,H-py);
-  const th=Math.round(W*0.05);
-  tape(W/2,H*(wide?0.13:0.085),-3.2,W*1.3,th,'POLICE LINE   •   सावधान   •   ALERT');
-  tape(W/2,py,2.2,W*1.3,th,'ALERT   •   POLICE LINE   •   सावधान');
-  const tagH=Math.round(W*0.058), tagY=H*(wide?0.13:0.085)+th+H*0.02;
-  const pill=drawPill(tag,pad+tagH*0.9,tagY,tagH,'left','#8b0000','#FFD600','#FFD600','800 '+Math.round(tagH*0.5)+'px '+ANEK);
-  // चेतावनी त्रिकोण
-  const tx=pad+tagH*0.5, ty=tagY+tagH/2; ctx.fillStyle='#FFD600'; poly([[tx,ty-tagH*0.5],[tx+tagH*0.55,ty+tagH*0.42],[tx-tagH*0.55,ty+tagH*0.42]]); ctx.fill();
-  ctx.fillStyle='#000'; ctx.font='800 '+Math.round(tagH*0.55)+'px '+ANEK; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('!',tx,ty+tagH*0.12);
-  drawBrand(W-pad,tagY+(tagH-Math.round(W*0.045))/2,Math.round(W*0.045),'right');
-  const ay=py+th/2+W*0.5*Math.tan(2.4*Math.PI/180)+H*0.014, ah=H-fh-ay-H*0.014, aw=W-2*pad, hh=body.length?ah*0.6:ah;
-  const hl=layoutText(head,KHAND,'700',aw,hh,H*0.12,36,1.08); drawText(hl,pad,ay,'left','#fff',this.hi,{shadow:'rgba(0,0,0,.6)',shadowBlur:8,shadowY:3});
-  if(body.length){ const bl=layoutText(body,ANEK,'700',aw,ah-hl.h-H*0.01,Math.round(W*0.036),22,1.28); drawText(bl,pad,ay+hl.h+H*0.01,'left','#ffd9d9','#FFE066'); }
-  ctx.fillStyle='#000'; ctx.fillRect(0,H-fh,W,fh); ctx.fillStyle='#FFD600'; ctx.fillRect(0,H-fh,W,Math.max(4,fh*0.08));
-  footerRow(pad,W-pad,H-fh/2+2,fh,'#FFD600','#fff','#ffd9d9');
- }};
-
-/* 5) बधाई / उपलब्धि - सुनहरा और हरा */
-TPL.congrats = { name:'बधाई / उपलब्धि', tag:'बधाई', body:true, hi:'#FFD54A', bodyLabel:'नीचे की खबर:',
- draw(g,head,body,tag){
-  const {W,H,wide}=g, pad=Math.round(W*0.06);
-  const bg=ctx.createRadialGradient(W*(wide?0.3:0.5),H*0.35,10,W/2,H/2,Math.max(W,H)*0.85); bg.addColorStop(0,'#0f7a5a'); bg.addColorStop(0.55,'#06402f'); bg.addColorStop(1,'#021f17');
-  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-  // सुनहरी किरणें
-  ctx.save(); ctx.translate(wide?W*0.27:W/2, wide?H/2:H*0.3); ctx.globalAlpha=0.07; ctx.fillStyle='#ffe28a';
-  for(let i=0;i<18;i++){ ctx.rotate(Math.PI/9); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.max(W,H),-Math.max(W,H)*0.07); ctx.lineTo(Math.max(W,H),Math.max(W,H)*0.07); ctx.closePath(); ctx.fill(); }
-  ctx.restore();
-  // कॉन्फ़ेटी (हर बार एक जैसी)
-  const r=rng(77); const cols=['#F6D46B','#E6B422','#ffffff','#7be0b3'];
-  for(let i=0;i<70;i++){ const x=r()*W, y=r()*H, s=6+r()*12; ctx.save(); ctx.translate(x,y); ctx.rotate(r()*6); ctx.globalAlpha=0.45+r()*0.45; ctx.fillStyle=cols[Math.floor(r()*cols.length)];
-    if(r()>0.5) ctx.fillRect(-s/2,-s/4,s,s/2); else { ctx.beginPath(); ctx.arc(0,0,s/3,0,7); ctx.fill(); } ctx.restore(); }
-  // सुनहरा दोहरा बॉर्डर
-  ctx.strokeStyle='#E6B422'; ctx.lineWidth=5; ctx.strokeRect(22,22,W-44,H-44); ctx.strokeStyle='rgba(246,212,107,.7)'; ctx.lineWidth=2; ctx.strokeRect(36,36,W-72,H-72);
-  let D, cx, cy, tx, ty, tw, th;
-  if(wide){ D=H*0.64; cx=W*0.27; cy=H*0.45; tx=W*0.52; tw=W*0.42; ty=H*0.1; th=H*0.74; }
-  else { D=W*(g.story?0.74:g.sq?0.48:0.6); cx=W/2; cy=H*(g.story?0.075:g.sq?0.07:0.075)+D/2+H*0.02; tx=pad; tw=W-2*pad; ty=cy+D/2+H*0.07; th=H-ty-H*0.1; }
-  // फ़ोटो गोले में
-  ctx.save(); ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=30; ctx.shadowOffsetY=10; ctx.fillStyle='#E6B422'; ctx.beginPath(); ctx.arc(cx,cy,D/2+D*0.035,0,7); ctx.fill(); ctx.restore();
-  const gg=ctx.createLinearGradient(cx-D/2,cy-D/2,cx+D/2,cy+D/2); gg.addColorStop(0,'#fff1b8'); gg.addColorStop(0.5,'#E6B422'); gg.addColorStop(1,'#a9780c');
-  ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(cx,cy,D/2+D*0.035,0,7); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(cx,cy,D/2+D*0.008,0,7); ctx.fill();
-  paintPhoto(cx-D/2,cy-D/2,D,D,()=>{ ctx.beginPath(); ctx.arc(cx,cy,D/2,0,7); },{filter:'contrast(1.05) saturate(1.08)'});
-  // रिबन में टैग
-  const bh=Math.round(W*0.085), bwid=Math.min(W*0.5, 360+tag.length*26), by=cy+D/2+D*0.035-bh*0.35, bx=cx-bwid/2;
-  const rb=ctx.createLinearGradient(0,by,0,by+bh); rb.addColorStop(0,'#fff1b8'); rb.addColorStop(0.5,'#E6B422'); rb.addColorStop(1,'#b8860b');
-  ctx.fillStyle='#a9780c'; poly([[bx-bh*0.55,by+bh*0.2],[bx+bh*0.2,by+bh*0.2],[bx+bh*0.2,by+bh*1.1],[bx-bh*0.55,by+bh*1.1],[bx-bh*0.2,by+bh*0.65]]); ctx.fill();
-  poly([[bx+bwid+bh*0.55,by+bh*0.2],[bx+bwid-bh*0.2,by+bh*0.2],[bx+bwid-bh*0.2,by+bh*1.1],[bx+bwid+bh*0.55,by+bh*1.1],[bx+bwid+bh*0.2,by+bh*0.65]]); ctx.fill();
-  ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=12; ctx.shadowOffsetY=4; ctx.fillStyle=rb; ctx.fillRect(bx,by,bwid,bh); ctx.shadowColor='transparent';
-  ctx.fillStyle='#06402f'; ctx.font='800 '+Math.round(bh*0.58)+'px '+ANEK; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(tag,cx,by+bh/2+bh*0.04);
-  // टेक्स्ट
-  const ay = wide? ty : by+bh+H*0.025, ah = wide? th : H-ay-H*0.1, hh=body.length?ah*0.58:ah;
-  const hl=layoutText(head,KHAND,'700',tw,hh,H*(wide?0.17:0.095),34,1.1);
-  const align=wide?'left':'center', ax=wide?tx:W/2;
-  drawText(hl,ax,ay,align,'#ffffff',this.hi,{shadow:'rgba(0,0,0,.5)',shadowBlur:8,shadowY:3});
-  if(body.length){ const bl=layoutText(body,ANEK,'700',tw,ah-hl.h-H*0.015,Math.round(Math.min(W,H*1.2)*0.036),20,1.3); drawText(bl,ax,ay+hl.h+H*0.015,align,'#d1fae5','#FFD54A'); }
-  drawDate(wide?tx:pad*0.7+26,H-pad*0.75-Math.round(W*0.036)-14,Math.round(W*0.036),'left','rgba(0,0,0,.45)','#fff','#E6B422');
-  followRow(W-pad*0.7-26,H-pad*0.75-14-Math.round(W*0.018),Math.round(W*0.034),'#F6D46B','#bfe9d3',W*0.6);
-  drawBrand(pad*0.7+26,pad*0.7+26,Math.round(W*0.045),'left');
- }};
-
-/* 6) दो-भाग वाला कार्ड - आधी फ़ोटो आधा टेक्स्ट */
-TPL.split = { name:'दो-भाग कार्ड', tag:'ताज़ा खबर', body:true, hi:'#FFD600', bodyLabel:'नीचे की खबर:',
- draw(g,head,body,tag){
+/* दो-भाग वाला कार्ड - आधी फ़ोटो, आधा टेक्स्ट (अलग-अलग रंग-संयोजन) */
+function splitDraw(th,g,head,body,tag){
   const {W,H}=g, pad=Math.round(W*0.05), vertical=(g.sq||g.wide);   // vertical = बाएँ फ़ोटो, दाएँ टेक्स्ट
-  ctx.fillStyle=vgrad(0,H,[[0,'#0b1b3a'],[1,'#0d2a5e']]); ctx.fillRect(0,0,W,H);
-  let ax,ay,aw,ah, slant;
+  const u=Math.min(W,H*1.3);
+  ctx.fillStyle=vgrad(0,H,[[0,th.bg0],[1,th.bg1]]); ctx.fillRect(0,0,W,H);
+  let ax,ay,aw,ah,slant;
   if(vertical){
     const sx=W*(g.wide?0.5:0.46); slant=W*0.04;
     paintPhoto(0,0,sx+slant,H,()=>poly([[0,0],[sx+slant,0],[sx-slant,H],[0,H]]),{filter:'contrast(1.05) saturate(1.05)'});
-    ctx.fillStyle='#FFD600'; poly([[sx+slant,0],[sx+slant+W*0.018,0],[sx-slant+W*0.018,H],[sx-slant,H]]); ctx.fill();
+    ctx.fillStyle=th.accent; poly([[sx+slant,0],[sx+slant+W*0.018,0],[sx-slant+W*0.018,H],[sx-slant,H]]); ctx.fill();
     ax=sx+slant+pad*0.7; aw=W-ax-pad*0.8; ay=H*0.14; ah=H*0.66;
-    drawPill(tag,ax,H*0.045,Math.round(Math.min(W,H*1.4)*0.06),'left','#FFD600','#111','','800 '+Math.round(Math.min(W,H*1.4)*0.032)+'px '+ANEK);
-    drawBrand(pad*0.6,pad*0.6,Math.round(Math.min(W,H*1.4)*0.05),'left');
+    drawPill(tag,ax,H*0.045,Math.round(u*0.06),'left',th.tagBg,th.tagFg,'','800 '+Math.round(u*0.032)+'px '+ANEK);
+    drawBrand(pad*0.6,pad*0.6,Math.round(u*0.05),'left');
   } else {
     const sy=H*(g.story?0.5:0.52); slant=H*0.03;
     paintPhoto(0,0,W,sy+slant,()=>poly([[0,0],[W,0],[W,sy-slant],[0,sy+slant]]),{filter:'contrast(1.05) saturate(1.05)'});
-    ctx.fillStyle='#FFD600'; poly([[0,sy+slant],[W,sy-slant],[W,sy-slant+H*0.011],[0,sy+slant+H*0.011]]); ctx.fill();
+    ctx.fillStyle=th.accent; poly([[0,sy+slant],[W,sy-slant],[W,sy-slant+H*0.011],[0,sy+slant+H*0.011]]); ctx.fill();
     ax=pad; aw=W-2*pad; ay=sy+slant+H*0.035; ah=H-ay-H*0.1;
-    drawPill(tag,pad,sy-slant-H*0.015,Math.round(W*0.06),'left','#FFD600','#111','','800 '+Math.round(W*0.032)+'px '+ANEK);
+    drawPill(tag,pad,sy-slant-H*0.015,Math.round(W*0.06),'left',th.tagBg,th.tagFg,'','800 '+Math.round(W*0.032)+'px '+ANEK);
     drawBrand(W-pad,pad*0.7,Math.round(W*0.052),'right');
   }
   const hh=body.length?ah*0.62:ah;
-  const hl=layoutText(head,KHAND,'700',aw,hh,H*(vertical?0.12:0.095),30,1.08); drawText(hl,ax,ay,'left','#fff',this.hi);
-  if(body.length){ const bl=layoutText(body,ANEK,'700',aw,ah-hl.h-H*0.014,Math.round(Math.min(W,H*1.3)*0.034),20,1.3); drawText(bl,ax,ay+hl.h+H*0.014,'left','#cbd5e1','#fbbf24'); }
-  const u=Math.min(W,H*1.3), dh=Math.round(u*0.04), fy=H-Math.round(H*0.045);
+  const hl=layoutText(head,KHAND,'700',aw,hh,H*(vertical?0.12:0.095),30,1.08); drawText(hl,ax,ay,'left','#fff',th.hi);
+  if(body.length){ const bl=layoutText(body,ANEK,'700',aw,ah-hl.h-H*0.014,Math.round(u*0.034),20,1.3); drawText(bl,ax,ay+hl.h+H*0.014,'left',th.bodyCol,th.bodyHi); }
+  const dh=Math.round(u*0.04), fy=H-Math.round(H*0.045);
   if(vertical){
-    // संकरे टेक्स्ट वाले हिस्से में: ऊपर फ़ॉलो/शेयर, उसके नीचे तारीख
-    followRow(W-pad*0.8,fy-dh-Math.round(u*0.024),Math.round(u*0.034),'#FFD600','#cbd5e1',(W-ax-pad*0.8));
-    drawDate(ax,fy-dh/2,dh,'left','rgba(0,0,0,.4)','#fff','#FFD600');
+    followRow(W-pad*0.8,fy-dh-Math.round(u*0.024),Math.round(u*0.034),th.accent,th.bodyCol,(W-ax-pad*0.8));
+    drawDate(ax,fy-dh/2,dh,'left','rgba(0,0,0,.4)','#fff',th.accent);
   } else {
-    drawDate(ax,fy-dh/2,dh,'left','rgba(0,0,0,.4)','#fff','#FFD600');
-    followRow(W-pad,fy,Math.round(u*0.034),'#FFD600','#cbd5e1',W*0.62);
+    drawDate(ax,fy-dh/2,dh,'left','rgba(0,0,0,.4)','#fff',th.accent);
+    followRow(W-pad,fy,Math.round(u*0.034),th.accent,th.bodyCol,W*0.62);
   }
- }};
-
+}
+const SPLIT_THEMES = {
+  split:        { name:'दो-भाग • नीला-पीला',   bg0:'#0b1b3a', bg1:'#0d2a5e', accent:'#FFD600', tagBg:'#FFD600', tagFg:'#111111', hi:'#FFD600', bodyCol:'#cbd5e1', bodyHi:'#fbbf24' },
+  split_red:    { name:'दो-भाग • लाल-काला',    bg0:'#7a0014', bg1:'#1a0007', accent:'#FFFFFF', tagBg:'#FFFFFF', tagFg:'#b00020', hi:'#FFD600', bodyCol:'#f6d5da', bodyHi:'#FFE066' },
+  split_green:  { name:'दो-भाग • हरा-सुनहरा',  bg0:'#0a5a41', bg1:'#031f16', accent:'#E6B422', tagBg:'#E6B422', tagFg:'#06301f', hi:'#FFD54A', bodyCol:'#d1fae5', bodyHi:'#FFD54A' },
+  split_saffron:{ name:'दो-भाग • भगवा-मैरून',  bg0:'#d9480f', bg1:'#5a1606', accent:'#FFFFFF', tagBg:'#FFFFFF', tagFg:'#b3360a', hi:'#FFE45C', bodyCol:'#ffe8d6', bodyHi:'#FFF176' }
+};
+Object.keys(SPLIT_THEMES).forEach(k=>{
+  const th=SPLIT_THEMES[k];
+  TPL[k]={ name:th.name, tag:'ताज़ा खबर', body:true, hi:th.hi, bodyLabel:'नीचे की खबर:', draw(g,h,b,t){ splitDraw(th,g,h,b,t); } };
+});
 
 /* 7) सिर्फ़ टेक्स्ट (बिना फ़ोटो) - जब फ़ोटो न हो या खबर लंबी हो */
 TPL.text = { name:'सिर्फ़ टेक्स्ट (बिना फ़ोटो)', tag:'ताज़ा खबर', body:true, hi:'#FFD600', bodyLabel:'पूरी खबर (यहाँ लंबा टेक्स्ट भी चलेगा):', theme:true,
@@ -645,7 +527,6 @@ function doRender(){
   el('tagLbl').textContent=t.tagLabel||'टैग (खाली छोड़ें तो अपने आप):';
   el('tagInp').placeholder=t.tag===null?'(इस डिज़ाइन में नहीं आता)':(t.tag||'जैसे: चौंकाने वाला शब्द');
   el('tagInp').disabled=t.tag===null; el('tagInp').style.opacity=t.tag===null?0.4:1;
-  el('thumbCtl').classList.toggle('hide',!t.thumb);
   el('themeCtl').classList.toggle('hide',!t.theme);
   fitPreview();
 }
@@ -686,6 +567,7 @@ function loadLogo(){
   rd.readAsDataURL(f);
 }
 function clearLogo(){ logo=null; try{ localStorage.removeItem('pn_logo'); }catch(x){} render(); }
+function removePhoto(){ photo=null; el('imageLoader').value=''; render(); }
 function reshuffle(){ S.seed+=1; render(); }
 
 async function download(){
