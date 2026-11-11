@@ -83,8 +83,7 @@ button.act { width:100%; padding:12px; border-radius:6px; border:none; font-weig
 
 <script>
 /* =========================================================
-   Pravin News Poster Studio  -  सब कुछ सीधे कैनवास पर बनता है,
-   इसलिए प्रीव्यू और डाउनलोड हमेशा एक जैसे आते हैं।
+   Pravin News Poster Studio
    ========================================================= */
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
@@ -99,51 +98,49 @@ const HANDLE = '@PravinNews';
 const KHAND = '"Khand", "Anek Devanagari", sans-serif';
 const ANEK  = '"Anek Devanagari", sans-serif';
 
-let S = { tpl:'clean', fmt:'post45', seed:1, color:'bluey' };
+let S = { tpl:'clean', fmt:'post45', seed:1, color:'blue' };
 let photo = null, logo = null, frame = null;
 
 function el(id){ return document.getElementById(id); }
 
-/* ---------------- संज्ञा पहचान (नाम रंगने के लिए) ---------------- */
-// इन सूचियों में आप खुद शब्द जोड़ सकते हैं (स्पेस या नई लाइन से अलग)
 const STOP = new Set((`
- का की के को में पर से ने तक लिए लिये द्वारा साथ बाद पहले बीच अंदर बाहर ऊपर नीचे दौरान अनुसार बारे बाबत तरफ ओर कारण
- यहां यहाँ वहां वहाँ जहां जहाँ कहां कहाँ आज कल अभी फिर जल्द अब तब जब तो भी ही नहीं न कुछ सभी सब कई एक दो तीन चार पांच
- छह सात आठ नौ दस इस उस यह वह ये वे जो जिस जिसे जिन जिनके कि क्योंकि लेकिन परंतु और एवं तथा या अपने अपनी अपना उनके
- उनकी उनका उन्हें उसे इसे इसके इसकी इसका उसके उसकी उसका मेरे मेरी मेरा हम आप तुम उन्होंने उसने इन्होंने हमारे आपके
- जैसे जैसा जैसी ऐसे ऐसा ऐसी कैसे कौन क्या किस किसका किसकी क्यों कितना कितने आदि सहित सिर्फ केवल बस ताकि जिससे जिसमें
- है हैं था थे थी हो होता होती होते होगा होगी होंगे हुआ हुई हुए हुईं गया गई गए गये गयी रहा रही रहे किया किए दिया दी दिए
- दिये लिया ली कहा कही कहे बताया बताई बताए बताते सुनाई सुनाया सुनाए पहुंचे पहुंची पहुंचा पहुंचना निकला निकली निकले मिला
- मिली मिले लगी लगा लगे आया आई आए आये आने जाने करने देने लेने होने रखने बनाने बनाया बनी बने बना करें करे करेगा करेंगे
- करना करता करती करते देना देता देती देते लेना लेता लेती लेते जाना जाता जाती जाते आना आता आती आते रहना रखा रखी रखे
- उठा उठाई उठे दिखा दिखी दिखे दिखाई दिखाया चला चली चले जुटी जुटे जुटा मचा मची मचे टला टली टले घुसी घुसा घुसे पड़ा पड़ी
- पड़े खुला खुली खुले सौंपी सौंपा चढ़ा रोका रोकी लगाई लगाया उठाया जताई जताया भेजा भेजी भेजे पाया पाई पाए सकता सकती सकते
- सोमवार मंगलवार बुधवार गुरुवार शुक्रवार शनिवार रविवार सुबह दोपहर शाम रात बीती बीते आगामी वर्ष साल महीने दिन घंटे मिनट
- लाख करोड़ हजार सैकड़ा किलो किलोग्राम प्रतिशत रुपये रुपया
- बड़ा बड़ी बड़े छोटा छोटी छोटे नया नई नए पुराना पुरानी पुराने अधिक ज्यादा कम पूरा पूरी पूरे अचानक तुरंत तत्काल करीब लगभग
- सुरक्षित गंभीर भारी भव्य बेकाबू जोरदार शानदार प्रमुख मुख्य विशेष अन्य दूसरा दूसरी दूसरे पहला पहली आवश्यक सकुशल स्थानीय
- सरकारी राष्ट्रीय क्षेत्रीय संबंधित उत्कृष्ट उल्लेखनीय सैकड़ों हजारों लाखों कुल सारे सारी सारा हर प्रत्येक सामान्य
- जीता जीती जीते परखी परखा परखे कराया कराई कराए करवाया सौंपे आधे आधा आधी तैनात उड़े उड़ा उड़ी
+  का की के को में पर से ने तक लिए लिये द्वारा साथ बाद पहले बीच अंदर बाहर ऊपर नीचे दौरान अनुसार बारे बाबत तरफ ओर कारण
+  यहां यहाँ वहां वहाँ जहां जहाँ कहां कहाँ आज कल अभी फिर जल्द अब तब जब तो भी ही नहीं न कुछ सभी सब कई एक दो तीन चार पांच
+  छह सात आठ नौ दस इस उस यह वह ये वे जो जिस जिसे जिन जिनके कि क्योंकि लेकिन परंतु और एवं तथा या अपने अपनी अपना उनके
+  उनकी उनका उन्हें उसे इसे इसके इसकी इसका उसके उसकी उसका मेरे मेरी मेरा हम आप तुम उन्होंने उसने इन्होंने हमारे आपके
+  जैसे जैसा जैसी ऐसे ऐसा ऐसी कैसे कौन क्या किस किसका किसकी क्यों कितना कितने आदि सहित सिर्फ केवल बस ताकि जिससे जिसमें
+  है हैं था थे थी हो होता होती होते होगा होगी होंगे हुआ हुई हुए हुईं गया गई गए गये गयी रहा रही रहे किया किए दिया दी दिए
+  दिये लिया ली कहा कही कहे बताया बताई बताए बताते सुनाई सुनाया सुनाए पहुंचे पहुंची पहुंचा पहुंचना निकला निकली निकले मिला
+  मिली मिले लगी लगा लगे आया आई आए आये आने जाने करने देने लेने होने रखने बनाने बनाया बनी बने बना करें करे करेगा करेंगे
+  करना करता करती करते देना देता देती देते लेना लेता लेती लेते जाना जाता जाती जाते आना आता आती आते रहना रखा रखी रखे
+  उठा उठाई उठे दिखा दिखी दिखे दिखाई दिखाया चला चली चले जुटी जुटे जुटा मचा मची मचे टला टली टले घुसी घुसा घुसे पड़ा पड़ी
+  पड़े खुला खुली खुले सौंपी सौंपा चढ़ा रोका रोकी लगाई लगाया उठाया जताई जताया भेजा भेजी भेजे पाया पाई पाए सकता सकती सकते
+  सोमवार मंगलवार बुधवार गुरुवार शुक्रवार शनिवार रविवार सुबह दोपहर शाम रात बीती बीते आगामी वर्ष साल महीने दिन घंटे मिनट
+  लाख करोड़ हजार सैकड़ा किलो किलोग्राम प्रतिशत रुपये रुपया
+  बड़ा बड़ी बड़े छोटा छोटी छोटे नया नई नए पुराना पुरानी पुराने अधिक ज्यादा कम पूरा पूरी पूरे अचानक तुरंत तत्काल करीब लगभग
+  सुरक्षित गंभीर भारी भव्य बेकाबू जोरदार शानदार प्रमुख मुख्य विशेष अन्य दूसरा दूसरी दूसरे पहला पहली आवश्यक सकुशल स्थानीय
+  सरकारी राष्ट्रीय क्षेत्रीय संबंधित उत्कृष्ट उल्लेखनीय सैकड़ों हजारों लाखों कुल सारे सारी सारा हर प्रत्येक सामान्य
+  जीता जीती जीते परखी परखा परखे कराया कराई कराए करवाया सौंपे आधे आधा आधी तैनात उड़े उड़ा उड़ी
 `).split(/\s+/).filter(Boolean));
 const HONOR = new Set(['श्री','श्रीमती','सुश्री','डॉ','डॉ.','डा.','कुमारी','पंडित','मौलाना','सूबेदार']);
 const ROLE = new Set(['सीएम','पीएम','मुख्यमंत्री','प्रधानमंत्री','मंत्री','विधायक','सांसद','महापौर','आयुक्त','जिलाधिकारी','डीएम','एसएसपी',
- 'एसपी','एसीपी','डीसीपी','एडीसीपी','कोच','अध्यक्ष','उपाध्यक्ष','सचिव','प्रबंधक','इंस्पेक्टर','दरोगा','सिपाही','चालक','युवक','युवती',
- 'पहलवान','प्रभारी','निरीक्षक','अधिकारी','चेयरमैन','निदेशक','कलेक्टर','न्यायाधीश','जज']);
+  'एसपी','एसीपी','डीसीपी','एडीसीपी','कोच','अध्यक्ष','उपाध्यक्ष','सचिव','प्रबंधक','इंस्पेक्टर','दरोगा','सिपाही','चालक','युवक','युवती',
+  'पहलवान','प्रभारी','निरीक्षक','अधिकारी','चेयरमैन','निदेशक','कलेक्टर','न्यायाधीश','जज']);
 const PLACE_TYPE = new Set(['थाना','थाने','गांव','गाँव','जिला','जनपद','तहसील','ब्लॉक','मंदिर','घाट','स्टेडियम','कॉलेज','स्कूल','अस्पताल',
- 'बैंक','पुल','चौराहा','चौकी','कस्बा','शहर','मोहल्ला','नगर','बाजार','हाईवे','मार्ग','रोड','स्टेशन','शाखा','विश्वविद्यालय','सभागार',
- 'संकुल','अदालत','कोर्ट','मस्जिद','चर्च','गुरुद्वारा','पार्क','आश्रम','धाम','मंडल','कार्यालय']);
+  'बैंक','पुल','चौराहा','चौकी','कस्बा','शहर','मोहल्ला','नगर','बाजार','हाईवे','मार्ग','रोड','स्टेशन','शाखा','विश्वविद्यालय','सभागार',
+  'संकुल','अदालत','कोर्ट','मस्जिद','चर्च','गुरुद्वारा','पार्क','आश्रम','धाम','मंडल','कार्यालय']);
 const KNOWN_PLACES = (`
- वाराणसी काशी बनारस लखनऊ दिल्ली मुंबई गोरखपुर प्रयागराज इलाहाबाद अयोध्या जौनपुर मऊ बलिया गाजीपुर चंदौली मिर्जापुर भदोही सोनभद्र
- आजमगढ़ आज़मगढ़ बस्ती कानपुर आगरा मेरठ नोएडा अहमदाबाद पटना बिहार झारखंड बंगाल गुजरात भारत सारनाथ पैगंबरपुर सिगरा लोहता
- चौबेपुर शिवपुर जंसा बड़ागांव हरहुआ पिंडरा रामनगर राजातालाब सेवापुरी चोलापुर कैंट लंका अस्सी मैदागिन गोदौलिया दशाश्वमेध
- राजघाट चौकाघाट पांडेयपुर भेलूपुर लहरतारा मंडुवाडीह कचहरी रोहनिया जमालपुर बाबतपुर छितौनी परमानंदपुर औड़िहार जूनागढ़ हालोल
- पंचमहल घोसी बनियापार करधना बरकी पूराघाट चांदमारी क्राइस्ट मिर्जामुराद गाजियाबाद उत्तराखंड पंजाब राजस्थान महाराष्ट्र
- काशी-विश्वनाथ विश्वनाथ गंगा वरुणा एयर-शो
+  वाराणसी काशी बनारस लखनऊ दिल्ली मुंबई गोरखपुर प्रयागराज इलाहाबाद अयोध्या जौनपुर मऊ बलिया गाजीपुर चंदौली मिर्जापुर भदोही सोनभद्र
+  आजमगढ़ आज़मगढ़ बस्ती कानपुर आगरा मेरठ नोएडा अहमदाबाद पटना बिहार झारखंड बंगाल गुजरात भारत सारनाथ पैगंबरपुर सिगरा लोहता
+  चौबेपुर शिवपुर जंसा बड़ागांव हरहुआ पिंडरा रामनगर राजातालाब सेवापुरी चोलापुर कैंट लंका अस्सी मैदागिन गोदौलिया दशाश्वमेध
+  राजघाट चौकाघाट पांडेयपुर भेलूपुर लहरतारा मंडुवाडीह कचहरी रोहनिया जमालपुर बाबतपुर छितौनी परमानंदपुर औड़िहार जूनागढ़ हालोल
+  पंचमहल घोसी बनियापार करधना बरकी पूराघाट चांदमारी क्राइस्ट मिर्जामुराद गाजियाबाद उत्तराखंड पंजाब राजस्थान महाराष्ट्र
+  काशी-विश्वनाथ विश्वनाथ गंगा वरुणा एयर-शो
 `).split(/\s+/).filter(Boolean);
 const KNOWN_SET = new Set(KNOWN_PLACES.map(x => x.replace('-', ' ')));
 const WEAK_SKIP = new Set((`
- निर्देश सुरक्षा प्रबंधन मांग तैयारी तैयारियां आशंका स्वागत उत्साह जांच कार्रवाई व्यवस्था समस्या सूचना जानकारी मामला घटना प्रयास
- उपलब्धि सम्मान बधाई शुभकामनाएं यातायात अपील संकल्प शपथ दौरे दौरा आगमन भ्रमण निरीक्षण ट्रायल बात बातें मौका स्थिति माहौल
+  निर्देश सुरक्षा प्रबंधन मांग तैयारी तैयारियां आशंका स्वागत उत्साह जांच कार्रवाई व्यवस्था समस्या सूचना जानकारी मामला घटना प्रयास
+  उपलब्धि सम्मान बधाई शुभकामनाएं यातायात अपील संकल्प शपथ दौरे दौरा आगमन भ्रमण निरीक्षण ट्रायल बात बातें मौका स्थिति माहौल
 `).split(/\s+/).filter(Boolean));
 const VERB_END = /(ीं|ेगा|ेगी|ेंगे|ोंगे|ोगा|ोगी|ाया|ाए|ाकर|कर|रहा|रहे|रही|वाले|वाली|वाला)$/;
 
@@ -188,7 +185,6 @@ function chooseNouns(ents, max, r, lens){
   for(const e of order){ if(picked.length>=max) break; if(picked.every(p=>e.a>p.b+1||e.b<p.a-1)) picked.push(e); }
   return picked;
 }
-// पाठ -> [{t:शब्द, hi:true/false}]   (*तारे* में लिखे शब्द हों तो सिर्फ़ वही रंगेंगे)
 function colorWords(text, max, seedBase){
   text = (text||'').trim();
   if(!text) return [];
@@ -209,7 +205,6 @@ function colorWords(text, max, seedBase){
   return words.map((t,i)=>({t,hi:hi.has(i)}));
 }
 
-/* ---------------- कैनवास के हेल्पर ---------------- */
 function rrect(x,y,w,h,r){
   const rr=Math.min(r,w/2,h/2);
   ctx.beginPath(); ctx.moveTo(x+rr,y); ctx.arcTo(x+w,y,x+w,y+h,rr); ctx.arcTo(x+w,y+h,x,y+h,rr);
@@ -218,10 +213,9 @@ function rrect(x,y,w,h,r){
 function poly(pts){ ctx.beginPath(); pts.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); }
 function vgrad(y0,y1,stops){ const g=ctx.createLinearGradient(0,y0,0,y1); stops.forEach(s=>g.addColorStop(s[0],s[1])); return g; }
 
-// फ़ोटो को किसी भी आकार (path) में भरता है। हल्का धुंधला बैकग्राउंड भी देता है।
 function paintPhoto(x,y,w,h,pathFn,opts){
   opts=opts||{};
-  if(!photo){            // फ़ोटो नहीं है: उस हिस्से को पूरी तरह पारदर्शी (खाली) कर दो
+  if(!photo){
     ctx.save(); ctx.globalCompositeOperation='destination-out'; ctx.fillStyle='#000';
     if(pathFn){ pathFn(); ctx.fill(); } else ctx.fillRect(x,y,w,h);
     ctx.restore(); return;
@@ -229,7 +223,6 @@ function paintPhoto(x,y,w,h,pathFn,opts){
   ctx.save();
   if(pathFn){ pathFn(); ctx.clip(); } else { ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip(); }
   const pw=photo.width, ph=photo.height;
-  // 1) धुंधला बैकग्राउंड
   const cs=Math.max(w/pw,h/ph), bw=pw*cs, bh=ph*cs;
   const k=24, small=document.createElement('canvas'); small.width=Math.max(8,Math.round(w/k)); small.height=Math.max(8,Math.round(h/k));
   const sc=small.getContext('2d'); sc.imageSmoothingQuality='high';
@@ -238,7 +231,6 @@ function paintPhoto(x,y,w,h,pathFn,opts){
   const mc=mid.getContext('2d'); mc.imageSmoothingQuality='high'; mc.drawImage(small,0,0,mid.width,mid.height);
   ctx.imageSmoothingQuality='high'; ctx.drawImage(mid,x,y,w,h);
   ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(x,y,w,h);
-  // 2) असली फ़ोटो
   const base = opts.base==='width' ? w/pw : cs;
   const z=parseFloat(el('zoom').value)*base, iw=pw*z, ih=ph*z;
   const cx=x+w/2+parseFloat(el('offX').value)/100*w;
@@ -249,7 +241,6 @@ function paintPhoto(x,y,w,h,pathFn,opts){
   ctx.restore();
 }
 
-/* टेक्स्ट: लाइनों में बाँटना, साइज़ ऑटो-फिट, रंगीन शब्द */
 function metrics(font){
   ctx.font=font; const m=ctx.measureText('अgहQ');
   const asc=m.fontBoundingBoxAscent||parseFloat(font.match(/(\d+(\.\d+)?)px/)[1])*0.9;
@@ -271,17 +262,16 @@ function layoutText(words,family,weight,maxW,maxH,maxS,minS,lh){
   const attempt=sz=>{
     font=weight+' '+sz+'px '+family; ctx.font=font; m=metrics(font); res=wrapWords(words,maxW);
     box=sz*lh; const n=res.lines.length;
-    h=(n-1)*box+Math.max(box,m.asc+m.desc);          // पूरा टेक्स्ट-ब्लॉक (ऊपर की मात्राओं समेत)
+    h=(n-1)*box+Math.max(box,m.asc+m.desc);
     return res.lines.every(l=>l.w<=maxW+1) && h<=maxH;
   };
   for(;size>=minS;size-=2){ if(attempt(size)) break; }
   if(size<minS){ size=minS; attempt(size); }
   return Object.assign({size,font,lh,h,box},res,m);
 }
-// L: layoutText का नतीजा.  align: left | center | right
 function drawText(L,x,y,align,base,hi,o){
   o=o||{}; ctx.font=L.font; ctx.textBaseline='alphabetic'; ctx.textAlign='left'; ctx.lineJoin='round';
-  const first=Math.max(0,(L.box-(L.asc+L.desc))/2);     // y से ऊपर कुछ नहीं निकलेगा
+  const first=Math.max(0,(L.box-(L.asc+L.desc))/2);
   L.lines.forEach((ln,i)=>{
     const by=y+first+L.asc+i*L.box;
     let sx = align==='center'? x-ln.w/2 : align==='right'? x-ln.w : x;
@@ -295,7 +285,6 @@ function drawText(L,x,y,align,base,hi,o){
   });
 }
 
-/* तारीख / ब्रांड */
 function dateText(){
   const v=el('dateInp').value; if(!v) return '';
   const p=v.split('-'); return parseInt(p[2],10)+' '+MONTHS[parseInt(p[1],10)-1]+' '+p[0];
@@ -330,8 +319,7 @@ function footerText(x,y,align,color,size,text){
   ctx.font='800 '+size+'px '+ANEK; ctx.fillStyle=color; ctx.textAlign=align; ctx.textBaseline='middle'; ctx.fillText(text,x,y);
 }
 
-
-/* सोशल आइकन (खुद बनाए हुए) और "FOLLOW & SHARE" पंक्ति */
+// YouTube आइकन - लाल रंग और सफ़ेद प्ले बटन
 function iconYT(x,y,w,h){ rrect(x,y,w,h,h*0.28); ctx.fillStyle='#FF0000'; ctx.fill(); ctx.fillStyle='#fff'; poly([[x+w*0.4,y+h*0.27],[x+w*0.4,y+h*0.73],[x+w*0.69,y+h*0.5]]); ctx.fill(); }
 function iconIG(x,y,s){
   const g=ctx.createLinearGradient(x,y+s,x+s,y); g.addColorStop(0,'#FEDA75'); g.addColorStop(0.35,'#FA7E1E'); g.addColorStop(0.62,'#D62976'); g.addColorStop(1,'#4F5BD5');
@@ -348,7 +336,6 @@ function iconX(x,y,s){
   ctx.strokeStyle='#fff'; ctx.lineWidth=s*0.09; ctx.lineCap='round'; ctx.beginPath();
   ctx.moveTo(x+s*0.3,y+s*0.28); ctx.lineTo(x+s*0.7,y+s*0.72); ctx.moveTo(x+s*0.7,y+s*0.28); ctx.lineTo(x+s*0.3,y+s*0.72); ctx.stroke(); ctx.lineCap='butt';
 }
-// xr: दाएँ किनारा, yc: बीच की लाइन, h: आइकन का साइज़, maxW: कितनी चौड़ाई मिल सकती है
 function followRow(xr,yc,h,handleCol,labelCol,maxW){
   const hs=Math.round(h*0.66); ctx.font='800 '+hs+'px '+ANEK; const hw=ctx.measureText(HANDLE).width;
   const gap=h*0.26, ws=[h*1.3,h,h,h], iw=ws.reduce((a,b)=>a+b,0)+gap*3;
@@ -360,7 +347,6 @@ function followRow(xr,yc,h,handleCol,labelCol,maxW){
   if(leftX-gap*1.6-lw >= xr-maxW){ ctx.textAlign='right'; ctx.fillStyle=labelCol; ctx.textBaseline='middle'; ctx.fillText(lab,leftX-gap*1.6,yc+h*0.04); }
   return leftX;
 }
-// बाएँ तारीख, दाएँ फ़ॉलो/शेयर
 function footerRow(x0,xr,yc,fh,dateCol,handleCol,labelCol){
   const ds=Math.round(fh*0.5), dt=dateText();
   if(dt) footerText(x0,yc,'left',dateCol,ds,dt);
@@ -368,21 +354,22 @@ function footerRow(x0,xr,yc,fh,dateCol,handleCol,labelCol){
   followRow(xr,yc,Math.round(fh*0.62),handleCol,labelCol,(xr-x0)-dw-fh*0.8);
 }
 
-/* ---------------- टेम्पलेट ---------------- */
 const TPL = {};
 
-/* रंग-संयोजन (ड्रॉप-डाउन से चुनें):  पृष्ठभूमि  +  उभार का रंग */
+/* मूल रंग-संयोजन (टैग और एक्सेंट मूल लाल रंग में) */
 const PAL = {
-  bluey:{ name:'नीला + पीला (पहले वाला)',        bg0:'#0b1b3a', bg1:'#0d2a5e', accent:'#FFD600', hi:'#FFD600', base:'#ffffff', tagFg:'#111111', bodyCol:'#cbd5e1', bodyHi:'#fbbf24' },
-  c1:   { name:'गहरा हरा-नीला + आसमानी (01393C / 00FFFF)', bg0:'#01393c', bg1:'#01191b', accent:'#00ffff', hi:'#00ffff', base:'#ffffff', tagFg:'#01393c', bodyCol:'#cfeaeb', bodyHi:'#00ffff' },
-  c2:   { name:'गहरा भूरा + सुनहरा (290C00 / FFBA00)',     bg0:'#290c00', bg1:'#100400', accent:'#ffba00', hi:'#ffba00', base:'#ffffff', tagFg:'#290c00', bodyCol:'#f1dcc2', bodyHi:'#ffba00' },
-  c3:   { name:'गहरा हरा + पीला (17484C / FFEC43)',        bg0:'#17484c', bg1:'#0a2528', accent:'#ffec43', hi:'#ffec43', base:'#ffffff', tagFg:'#17484c', bodyCol:'#d3e8e9', bodyHi:'#ffec43' },
-  c4:   { name:'स्लेट-नीला + सफ़ेद (23263E / FEFEFC)',      bg0:'#23263e', bg1:'#10121f', accent:'#fefefc', hi:'#fefefc', base:'#aeb4d1', tagFg:'#23263e', bodyCol:'#aeb4d1', bodyHi:'#fefefc' }
+  blue:{ name:'न्यूज़ नीला  (नीला + लाल + पीला)', bg0:'#0c2e96', bg1:'#041450', accent:'#e4002b', tagBg:'#e4002b', tagFg:'#ffffff',
+         hi:'#ffd100', base:'#ffffff', bodyCol:'#eaf0ff', bodyHi:'#ffd100', dateBg:'rgba(0,0,0,.38)', dateFg:'#ffffff',
+         handle:'#ffffff', label:'#c9d6f5', pat:'#ffffff', bar:'rgba(0,0,0,.40)', barSolid:'#041450' },
+  red:  { name:'ब्रेकिंग काला-लाल  (काला + लाल + पीला)', bg0:'#1d1d1f', bg1:'#060607', accent:'#e10600', tagBg:'#e10600', tagFg:'#ffffff',
+         hi:'#ffd400', base:'#ffffff', bodyCol:'#ececec', bodyHi:'#ffd400', dateBg:'rgba(225,6,0,.9)', dateFg:'#ffffff',
+         handle:'#ffffff', label:'#bdbdbd', pat:'#ffffff', bar:'rgba(0,0,0,.55)', barSolid:'#060607' },
+  white:{ name:'सफ़ेद पैनल  (सफ़ेद + नेवी + लाल)', bg0:'#ffffff', bg1:'#e9eef8', accent:'#d7001e', tagBg:'#d7001e', tagFg:'#ffffff',
+         hi:'#d7001e', base:'#0b1e4f', bodyCol:'#26365e', bodyHi:'#d7001e', dateBg:'#0b1e4f', dateFg:'#ffffff',
+         handle:'#0b1e4f', label:'#4b5b82', pat:'#0b1e4f', bar:'#0b1e4f', barSolid:'#0b1e4f', light:true }
 };
-function pal(){ return PAL[S.color]||PAL.bluey; }
+function pal(){ return PAL[S.color]||PAL.blue; }
 
-// हेडलाइन + खबर को एक डिब्बे में बैठाता है।
-// खबर न हो -> हेडलाइन पूरा डिब्बा भर देती है।  खबर हो -> जितनी लंबी खबर, उतनी हेडलाइन छोटी।
 function drawHeadBody(head,body,ax,ay,aw,ah,o){
   o=o||{}; const align=o.align||'left', gap=o.gap||ah*0.04, has=body.length>0;
   let hh=ah;
@@ -406,7 +393,7 @@ function drawHeadBody(head,body,ax,ay,aw,ah,o){
   return {headH:hl.h};
 }
 
-/* 0) क्लासिक - आपका पुराना डिज़ाइन (सिर्फ़ 4:5) */
+/* 0) क्लासिक */
 TPL.classic = { name:'क्लासिक (आपका फ्रेम)', fmts:['post45'], tag:null, body:true, hi:'#FFD600', bodyLabel:'नीचे की खबर:',
  draw(g,head,body){
   const {W,H}=g;
@@ -420,7 +407,7 @@ TPL.classic = { name:'क्लासिक (आपका फ्रेम)', fmt
   if(body.length){ const bl=layoutText(body,ANEK,'700',W-120,200,55.88,34,1.25); drawText(bl,W/2,1090+(205-bl.h)/2,'center','#000','#c70100'); }
  }};
 
-/* 2) क्लीन कार्ड - सफ़ेद/नीला/सुनहरा */
+/* 1) क्लीन कार्ड */
 TPL.clean = { name:'क्लीन कार्ड', tag:'ताज़ा खबर', body:true, hi:'#C27C00', bodyLabel:'नीचे की खबर:',
  draw(g,head,body,tag){
   const {W,H,wide}=g, pad=Math.round(W*0.05), blue='#0B3D91', navy='#0b2a5b', gold='#D4A017';
@@ -452,50 +439,52 @@ TPL.clean = { name:'क्लीन कार्ड', tag:'ताज़ा ख�
   footerRow(pad,W-pad,H-fh/2+2,fh,'#fff','#ffe9a3','#c9d6ee');
  }};
 
-/* दो-भाग कार्ड - आधी फ़ोटो, आधा टेक्स्ट */
+/* 2) दो-भाग कार्ड - केवल बीच की पट्टी पीली (#FFD600), बाकी सब लाल */
 TPL.split = { name:'दो-भाग कार्ड', body:true, color:true, bodyLabel:'नीचे की खबर:',
  draw(g,head,body,tag){
   const P=pal(), {W,H}=g, pad=Math.round(W*0.05), vertical=(g.sq||g.wide), u=Math.min(W,H*1.3);
   ctx.fillStyle=vgrad(0,H,[[0,P.bg0],[1,P.bg1]]); ctx.fillRect(0,0,W,H);
   let ax,ay,aw,ah,slant;
+  const dividerYellow = '#FFD600'; // आपकी पसंद की पीली पट्टी
+
   if(vertical){
     const sx=W*(g.wide?0.5:0.46); slant=W*0.04;
     paintPhoto(0,0,sx+slant,H,()=>poly([[0,0],[sx+slant,0],[sx-slant,H],[0,H]]),{filter:'contrast(1.05) saturate(1.05)'});
-    ctx.fillStyle=P.accent; poly([[sx+slant,0],[sx+slant+W*0.018,0],[sx-slant+W*0.018,H],[sx-slant,H]]); ctx.fill();
+    ctx.fillStyle=dividerYellow; poly([[sx+slant,0],[sx+slant+W*0.018,0],[sx-slant+W*0.018,H],[sx-slant,H]]); ctx.fill();
     ax=sx+slant+pad*0.7; aw=W-ax-pad*0.8;
     const tagH=Math.round(u*0.06);
-    drawPill(tag,ax,H*0.045,tagH,'left',P.accent,P.tagFg,'','800 '+Math.round(u*0.032)+'px '+ANEK);
+    drawPill(tag,ax,H*0.045,tagH,'left',P.tagBg,P.tagFg,'','800 '+Math.round(u*0.032)+'px '+ANEK);
     drawBrand(pad*0.6,pad*0.6,Math.round(u*0.05),'left');
     ay=H*0.045+tagH+H*0.03; ah=H-ay-H*0.2;
   } else {
     const sy=H*(g.story?0.5:0.52); slant=H*0.03;
     paintPhoto(0,0,W,sy+slant,()=>poly([[0,0],[W,0],[W,sy-slant],[0,sy+slant]]),{filter:'contrast(1.05) saturate(1.05)'});
-    ctx.fillStyle=P.accent; poly([[0,sy+slant],[W,sy-slant],[W,sy-slant+H*0.011],[0,sy+slant+H*0.011]]); ctx.fill();
+    ctx.fillStyle=dividerYellow; poly([[0,sy+slant],[W,sy-slant],[W,sy-slant+H*0.011],[0,sy+slant+H*0.011]]); ctx.fill();
     ax=pad; aw=W-2*pad; ay=sy+slant+H*0.035; ah=H-ay-H*0.1;
-    drawPill(tag,pad,sy-slant-H*0.015,Math.round(W*0.06),'left',P.accent,P.tagFg,'','800 '+Math.round(W*0.032)+'px '+ANEK);
+    drawPill(tag,pad,sy-slant-H*0.015,Math.round(W*0.06),'left',P.tagBg,P.tagFg,'','800 '+Math.round(W*0.032)+'px '+ANEK);
     drawBrand(W-pad,pad*0.7,Math.round(W*0.052),'right');
   }
   drawHeadBody(head,body,ax,ay,aw,ah,{headCol:P.base,headHi:P.hi,bodyCol:P.bodyCol,bodyHi:P.bodyHi,bodyMax:Math.round(u*0.034),gap:H*0.014});
   const dh=Math.round(u*0.04), fy=H-Math.round(H*0.045);
   if(vertical){
-    followRow(W-pad*0.8,fy-dh-Math.round(u*0.024),Math.round(u*0.034),P.accent,P.bodyCol,(W-ax-pad*0.8));
-    drawDate(ax,fy-dh/2,dh,'left','rgba(0,0,0,.4)','#fff',P.accent);
+    followRow(W-pad*0.8,fy-dh-Math.round(u*0.024),Math.round(u*0.034),P.handle,P.label,(W-ax-pad*0.8));
+    drawDate(ax,fy-dh/2,dh,'left',P.dateBg,P.dateFg,P.accent);
   } else {
-    drawDate(ax,fy-dh/2,dh,'left','rgba(0,0,0,.4)','#fff',P.accent);
-    followRow(W-pad,fy,Math.round(u*0.034),P.accent,P.bodyCol,W*0.62);
+    drawDate(ax,fy-dh/2,dh,'left',P.dateBg,P.dateFg,P.accent);
+    followRow(W-pad,fy,Math.round(u*0.034),P.handle,P.label,W*0.62);
   }
  }};
 
-/* सिर्फ़ टेक्स्ट - चाहें तो छोटी गोल फ़ोटो भी (फ़ोटो न हो तो वह जगह अपने-आप हट जाती है) */
+/* 3) सिर्फ़ टेक्स्ट */
 TPL.text = { name:'सिर्फ़ टेक्स्ट (फ़ोटो चाहें तो गोल)', body:true, color:true, bodyLabel:'पूरी खबर (यहाँ लंबा टेक्स्ट भी चलेगा):',
  draw(g,head,body,tag){
   const P=pal(), {W,H,wide}=g, pad=Math.round(W*0.06), unit=Math.min(W,H*1.3);
   const bg=ctx.createLinearGradient(0,0,W*0.6,H); bg.addColorStop(0,P.bg0); bg.addColorStop(1,P.bg1); ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-  ctx.save(); ctx.globalAlpha=0.06; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(W*0.92,H*0.1,Math.min(W,H)*0.45,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(W*0.04,H*0.96,Math.min(W,H)*0.36,0,7); ctx.fill(); ctx.restore();
-  ctx.save(); ctx.globalAlpha=0.05; ctx.strokeStyle='#fff'; ctx.lineWidth=3; for(let i=-H;i<W;i+=40){ ctx.beginPath(); ctx.moveTo(i,H); ctx.lineTo(i+H,0); ctx.stroke(); } ctx.restore();
+  ctx.save(); ctx.globalAlpha=P.light?0.05:0.06; ctx.fillStyle=P.pat; ctx.beginPath(); ctx.arc(W*0.92,H*0.1,Math.min(W,H)*0.45,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(W*0.04,H*0.96,Math.min(W,H)*0.36,0,7); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.globalAlpha=P.light?0.04:0.05; ctx.strokeStyle=P.pat; ctx.lineWidth=3; for(let i=-H;i<W;i+=40){ ctx.beginPath(); ctx.moveTo(i,H); ctx.lineTo(i+H,0); ctx.stroke(); } ctx.restore();
   ctx.fillStyle=P.accent; ctx.fillRect(0,0,Math.round(W*0.014),H);
   const fh=Math.round(W*0.062), tagH=Math.round(unit*0.062);
-  drawPill(tag,pad,pad*0.7,tagH,'left',P.accent,P.tagFg,'','800 '+Math.round(tagH*0.5)+'px '+ANEK);
+  drawPill(tag,pad,pad*0.7,tagH,'left',P.tagBg,P.tagFg,'','800 '+Math.round(tagH*0.5)+'px '+ANEK);
   drawBrand(W-pad,pad*0.7,Math.round(unit*0.055),'right');
   let ax=pad, aw=W-2*pad, ay=pad*0.7+tagH+H*0.04, ah=H-fh-ay-H*0.03, align='left';
   if(photo){
@@ -507,17 +496,16 @@ TPL.text = { name:'सिर्फ़ टेक्स्ट (फ़ोटो च
     paintPhoto(cx-D/2,cy-D/2,D,D,()=>{ ctx.beginPath(); ctx.arc(cx,cy,D/2,0,7); },{filter:'contrast(1.05) saturate(1.06)'});
   }
   drawHeadBody(head,body,ax,ay,aw,ah,{align:align,headCol:P.base,headHi:P.hi,bodyCol:P.bodyCol,bodyHi:P.bodyHi,bodyMax:Math.round(unit*(g.story?0.068:0.052)),gap:H*0.05,divider:P.accent,divW:Math.round(W*0.16),divH:Math.max(6,Math.round(H*0.006)),bodyLH:1.4,headFx:{shadow:'rgba(0,0,0,.45)',shadowBlur:8,shadowY:3}});
-  ctx.fillStyle='rgba(0,0,0,.35)'; ctx.fillRect(0,H-fh,W,fh); ctx.fillStyle=P.accent; ctx.fillRect(0,H-fh,W,Math.max(4,fh*0.08));
-  footerRow(pad,W-pad,H-fh/2+2,fh,'#fff','#fff',P.bodyCol);
+  ctx.fillStyle=P.bar; ctx.fillRect(0,H-fh,W,fh); ctx.fillStyle=P.accent; ctx.fillRect(0,H-fh,W,Math.max(4,fh*0.08));
+  footerRow(pad,W-pad,H-fh/2+2,fh,'#fff','#fff','#cbd5e1');
  }};
 
-/* वीडियो 9:16 कवर/ओवरले - सिर्फ़ नीचे छोटा कार्ड, ऊपर बस दो छोटे चिप. बाकी पूरा वीडियो खुला रहता है.
-   (ऐप के बटनों वाला सबसे निचला हिस्सा खाली रहता है) */
+/* 4) वीडियो 9:16 ओवरले */
 TPL.video9 = { name:'वीडियो 9:16 • हल्का ओवरले', fmts:['story'], noPhoto:true, color:true, ovh:true, body:false,
  draw(g,head,body,tag){
   const P=pal(), {W,H}=g, pad=Math.round(W*0.05), r=Math.round(W*0.04);
   const chipH=Math.round(W*0.055), chipY=H*0.075;
-  drawPill(tag,pad,chipY,chipH,'left',P.accent,P.tagFg,'','800 '+Math.round(chipH*0.5)+'px '+ANEK);
+  drawPill(tag,pad,chipY,chipH,'left',P.tagBg,P.tagFg,'','800 '+Math.round(chipH*0.5)+'px '+ANEK);
   drawBrand(W-pad,chipY,chipH,'right');
   const cardH=H*parseFloat(el('ovH').value)/100, barH=Math.round(H*0.052), bottom=H*0.79;
   const barY=bottom-barH, cardY=barY-cardH-H*0.008;
@@ -527,13 +515,11 @@ TPL.video9 = { name:'वीडियो 9:16 • हल्का ओवरले
   const ax=pad*1.8, aw=W-2*pad*1.8, ay=cardY+cardH*0.07, ah=cardH*0.86;
   drawHeadBody(head,[],ax,ay,aw,ah,{align:'center',headCol:P.base,headHi:P.hi,headMax:H*0.09,headFx:{shadow:'rgba(0,0,0,.4)',shadowBlur:8,shadowY:3}});
   ctx.save(); ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=18; ctx.shadowOffsetY=6;
-  rrect(pad,barY,W-2*pad,barH,r*0.7); ctx.fillStyle=P.bg1; ctx.fill(); ctx.restore();
+  rrect(pad,barY,W-2*pad,barH,r*0.7); ctx.fillStyle=P.barSolid; ctx.fill(); ctx.restore();
   rrect(pad,barY,W-2*pad,barH,r*0.7); ctx.lineWidth=Math.max(3,W*0.004); ctx.strokeStyle=P.accent; ctx.stroke();
-  footerRow(pad*1.8,W-pad*1.8,barY+barH/2+2,barH*0.62,'#fff','#fff',P.bodyCol);
+  footerRow(pad*1.8,W-pad*1.8,barY+barH/2+2,barH*0.62,'#fff','#fff','#cbd5e1');
  }};
 
-
-// टैग खाली हो तो खबर देखकर अपने-आप सही लेबल (हर खबर "ताज़ा" नहीं होती)
 function autoTag(headTxt,bodyTxt){
   const t=((headTxt||'')+' '+(bodyTxt||'')).replace(/\*/g,' ');
   const has=arr=>arr.some(w=>t.indexOf(w)>-1);
@@ -549,7 +535,6 @@ function autoTag(headTxt,bodyTxt){
   return 'खबर';
 }
 
-/* ---------------- मुख्य रेंडर ---------------- */
 let rafId=0;
 function render(){ cancelAnimationFrame(rafId); rafId=requestAnimationFrame(doRender); }
 function doRender(){
@@ -563,7 +548,7 @@ function doRender(){
   const body=t.body? colorWords(el('bodyInp').value,3,104729) : [];
   const tag=(el('tagInp').value.trim())||autoTag(el('headInp').value,el('bodyInp').value);
   t.draw(g,head,body,tag);
-  // लेबल और कंट्रोल बदलना
+
   el('bodyLbl').textContent=t.bodyLabel||'नीचे की खबर:';
   el('bodyInp').disabled=!t.body; el('bodyInp').style.opacity=t.body?1:0.4;
   el('tagLbl').textContent='टैग / लेबल (खाली छोड़ें तो खबर से अपने-आप बनेगा):';
@@ -575,7 +560,7 @@ function doRender(){
   const nop=!!t.noPhoto;
   el('imageLoader').disabled=nop; el('imageLoader').style.opacity=nop?0.4:1;
   el('photoHint').textContent = nop ? 'इस फ्रेम में फ़ोटो नहीं आती। यह वीडियो के ऊपर कवर / लेआउट / PIP की तरह लगाने के लिए है।'
-     : (S.tpl==='text' ? 'फ़ोटो डालेंगे तो छोटी गोल फ़ोटो बनेगी; न डालें तो वह जगह अपने-आप हट जाएगी।' : 'फ़ोटो न डालें तो फ़ोटो वाला हिस्सा पारदर्शी रहेगा (ओवरले / जैकेट PNG)। टैग, लोगो और टेक्स्ट बने रहेंगे।');
+      : (S.tpl==='text' ? 'फ़ोटो डालेंगे तो छोटी गोल फ़ोटो बनेगी; न डालें तो वह जगह अपने-आप हट जाएगी।' : 'फ़ोटो न डालें तो फ़ोटो वाला हिस्सा पारदर्शी रहेगा (ओवरले / जैकेट PNG)। टैग, लोगो और टेक्स्ट बने रहेंगे।');
   fitPreview();
 }
 function fitPreview(){
@@ -584,7 +569,6 @@ function fitPreview(){
   cv.style.width=target+'px';
 }
 
-/* ---------------- बटन, फ़ोटो, लोगो, तारीख ---------------- */
 function buildButtons(){
   const tg=el('tplGrid'); tg.innerHTML='';
   Object.keys(TPL).forEach(k=>{ const b=document.createElement('button'); b.className='opt'+(S.tpl===k?' on':''); b.textContent=TPL[k].name; b.onclick=()=>{ S.tpl=k; buildButtons(); render(); }; tg.appendChild(b); });
@@ -619,7 +603,7 @@ function removePhoto(){ photo=null; el('imageLoader').value=''; render(); }
 function reshuffle(){ S.seed+=1; render(); }
 
 async function download(){
-  const btn=el('saveBtn'), old=btn.textContent; btn.tकextContent='सेव हो रहा है...';
+  const btn=el('saveBtn'), old=btn.textContent; btn.textContent='सेव हो रहा है...';
   try{
     await document.fonts.ready; doRender();
     const blob=await new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error('blob')),'image/png'));
@@ -627,14 +611,13 @@ async function download(){
     const name='PravinNews_'+S.tpl+'_'+S.fmt+'_'+t.getFullYear()+p(t.getMonth()+1)+p(t.getDate())+'_'+p(t.getHours())+p(t.getMinutes())+'.png';
     const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),5000);
-    setToday(true);                         // डाउनलोड के बाद तारीख अपने आप आज की हो जाए
+    setToday(true);
   }catch(err){
     console.error(err);
     alert('पोस्टर सेव नहीं हो पाया। (क्लासिक डिज़ाइन में frame.png/इंटरनेट जाँचिए) फिर कोशिश कीजिए।');
   }finally{ btn.textContent=old; render(); }
 }
 
-/* ---------------- शुरुआत ---------------- */
 frame=new Image(); frame.crossOrigin='anonymous';
 frame.onerror=function(){ frame.onerror=null; frame.src='https://i.postimg.cc/GmkN6q4B/New-Project-(2).png'; };
 frame.onload=()=>render(); frame.src='frame.png';
