@@ -41,8 +41,8 @@ canvas{width:100%;height:auto;border-radius:10px;border:1px solid var(--bd);disp
 <div class="row"><label>फोटो बाएँ-दाएँ<input type="range" id="xs" min="-300" max="300" value="0"></label><label>फोटो ऊपर-नीचे (क्लासिक)<input type="range" id="ys" min="-100" max="100" value="0"></label></div>
 <label class="chk"><input type="checkbox" id="qt" checked> नाम होने पर टेक्स्ट पर ‘ ’ लगाएँ</label>
 <button id="dl">⬇ JPEG डाउनलोड (1080×1350)</button>
-<button class="sec" id="rs">सब साफ़ करें</button>
-<p class="hint">डाउनलोड होते ही फोटो, टेक्स्ट और नाम अपने-आप साफ़ हो जाएँगे। लोगो और बाकी सेटिंग बनी रहेंगी। फ़ाइल का नाम खबर के शब्दों से बनता है।</p>
+<button class="sec" id="rs">🗑 क्लियर ऑल (सब साफ़ करें)</button>
+<p class="hint">डाउनलोड के बाद कुछ अपने-आप नहीं हटता, ताकि गलती हो तो सुधारकर दोबारा डाउनलोड कर सकें। नई खबर के लिए "क्लियर ऑल" दबाएँ: इससे फोटो, टेक्स्ट, नाम और कैप्शन हटेंगे, लोगो और सेटिंग बनी रहेंगी। फ़ाइल का नाम खबर के शब्दों से बनता है।</p>
 </div>
 <div class="pv"><canvas id="c" width="1080" height="1350"></canvas>
 <img id="last" alt="आख़िरी पोस्टर"><p class="hint" id="lh" style="display:none">आख़िरी पोस्टर (सेव करने के लिए लंबा दबाएँ)</p></div>
@@ -188,7 +188,7 @@ function fname(){
  const pol=/नेता|मंत्री|सीएम|पीएम|विधायक|सांसद|पार्टी|भाजपा|कांग्रेस|सपा|बसपा|योगी|मोदी|अखिलेश|राहुल|चुनाव|सरकार|विपक्ष|राजनीति/.test(all);
  const d=new Date(),p=n=>String(n).padStart(2,'0'),ts=d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds());
  return 'PravinNews_'+(pol?'Politics_':'')+words+'_'+ts+'.jpg'}
-$('dl').onclick=()=>{const nm=fname();c.toBlob(b=>{saveLast(b);const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nm;document.body.appendChild(a);a.click();a.remove();setTimeout(reset,300)},'image/jpeg',0.95)};
+$('dl').onclick=()=>{const nm=fname();c.toBlob(b=>{saveLast(b);const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nm;document.body.appendChild(a);a.click();a.remove()},'image/jpeg',0.95)};
 Promise.all([document.fonts.load('800 60px "Anek Devanagari"'),document.fonts.load('700 60px "Anek Devanagari"'),document.fonts.load('700 60px Khand','अA'),document.fonts.load('italic 400 40px "Anek Devanagari"')]).then(draw,draw);
 draw();
 </script></body></html>
