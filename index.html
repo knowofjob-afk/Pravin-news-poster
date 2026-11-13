@@ -2,7 +2,7 @@
 <html lang="hi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pravin News - Poster Studio</title>
-<link href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wght@400;700;800&family=Khand:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wght@400;600;700;800&family=Khand:wght@600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f6f4ef;--card:#fff;--tx:#1a1a1a;--mu:#666;--bd:#ddd;--ac:#d71920}
 @media (prefers-color-scheme:dark){:root{--bg:#17171a;--card:#222226;--tx:#f1f1f1;--mu:#aaa;--bd:#3a3a40}}
@@ -26,12 +26,13 @@ canvas{width:100%;height:auto;border-radius:10px;border:1px solid var(--bd);disp
 <div class="wrap">
 <div class="card">
 <h1>📰 Pravin News - Poster Studio</h1>
-<label>पोस्टर स्टाइल<select id="st"><option value="new">नया: बड़ी फोटो + एक हेडिंग (बयान/न्यूज़)</option><option value="old">क्लासिक: आपका फ्रेम (frame.png)</option><option value="bar">कैप्शन कार्ड: रंगीन पट्टी + सोशल आइकन</option></select></label>
+<label>पोस्टर स्टाइल<select id="st"><option value="new">नया: बड़ी फोटो + एक हेडिंग (बयान/न्यूज़)</option><option value="old">क्लासिक: आपका फ्रेम (frame.png)</option><option value="bar">कैप्शन कार्ड: रंगीन पट्टी + सोशल आइकन</option><option value="circ">गोल कार्ड: गहरा बैकग्राउंड + गोल फोटो</option></select></label>
+<p class="hint" id="chint" style="display:none">गोल कार्ड: फोटो 1 = नीचे बाईं बड़ी फोटो, फोटो 2 = ऊपर की छोटी गोल फोटो (वैकल्पिक)। नाम बॉक्स में "नाम, पद" लिखें, जैसे: अनंत सिंह, मोकामा विधायक। बैकग्राउंड मेन्यू से रंग-थीम बदलती है।</p>
 <div id="oldf" style="display:none;gap:12px;grid-template-columns:minmax(0,1fr)"><label>नीचे का कैप्शन (लाल शब्द: चुनकर बटन, या *शब्द*)<textarea id="cap" placeholder="खबर का कैप्शन"></textarea></label><label>तारीख़ टैग<input type="text" id="dt"></label><p class="hint">क्लासिक में ऊपर की हेडिंग "टेक्स्ट / हेडिंग" बॉक्स से बनती है। फ्रेम का रंग, आइकन और @PravinNews फ्रेम की PNG से आते हैं।</p></div>
 <label>टेक्स्ट / हेडिंग (Enter = नई लाइन)<textarea id="txt" placeholder="यहाँ हेडिंग/बयान पेस्ट करें"></textarea></label>
 <button class="sec" id="red" onmousedown="event.preventDefault()">🔴 चुने हुए शब्द लाल करें / हटाएँ</button>
 <p class="hint">शब्द चुनकर यह बटन दबाएँ। हाथ से भी: *लाल शब्द*</p>
-<label>नाम बॉक्स (सिर्फ़ नए स्टाइल में; खाली = न्यूज़ लेआउट)<input type="text" id="name" placeholder="जैसे: ओम प्रकाश राजभर, कैबिनेट मंत्री"></label>
+<label>नाम बॉक्स (नया और गोल-कार्ड स्टाइल में; खाली = न्यूज़ लेआउट)<input type="text" id="name" placeholder="जैसे: ओम प्रकाश राजभर, कैबिनेट मंत्री"></label>
 <div class="row"><label>फोटो 1 (PNG/JPG)<input type="file" id="f1" accept="image/*"></label><label>फोटो 2 (वैकल्पिक)<input type="file" id="f2" accept="image/*"></label></div>
 <label>2 फोटो हों तो बड़ी फोटो (नया स्टाइल)<select id="big"><option value="1">फोटो 1 बड़ी (बाएँ)</option><option value="2">फोटो 2 बड़ी (दाएँ)</option></select></label>
 <label>लोगो (नया स्टाइल, एक बार डालें)<input type="file" id="fl" accept="image/*"></label>
@@ -39,8 +40,9 @@ canvas{width:100%;height:auto;border-radius:10px;border:1px solid var(--bd);disp
 <label>बैकग्राउंड (नया स्टाइल)<select id="bg"><option value="grad">क्रीम ग्रेडिएंट</option><option value="band">क्रीम + रंगीन पट्टी</option><option value="plain">सादा क्रीम</option><option value="pink">हल्का गुलाबी</option><option value="blue">हल्का नीला</option><option value="green">हल्का हरा</option><option value="saffron">हल्का केसरिया</option><option value="lav">हल्का बैंगनी</option><option value="white">सफेद</option></select></label></div>
 <div class="row"><label>टेक्स्ट आकार (नया)<input type="range" id="ts" min="70" max="115" value="100"></label><label>फोटो आकार<input type="range" id="zs" min="70" max="130" value="100"></label></div>
 <div class="row"><label>फोटो बाएँ-दाएँ<input type="range" id="xs" min="-300" max="300" value="0"></label><label>फोटो ऊपर-नीचे (क्लासिक)<input type="range" id="ys" min="-100" max="100" value="0"></label></div>
+<label>टेक्स्ट की मोटाई (सभी स्टाइल)<select id="fw"><option value="600">हल्की</option><option value="700" selected>मध्यम</option><option value="800">भारी</option></select></label>
 <label class="chk"><input type="checkbox" id="qt" checked> नाम होने पर टेक्स्ट पर ‘ ’ लगाएँ</label>
-<button id="dl">⬇ JPEG डाउनलोड (1080×1350)</button>
+<button id="dl">⬇ डाउनलोड (JPEG; फोटो-जगह खाली हो तो पारदर्शी PNG)</button>
 <button class="sec" id="rs">🗑 क्लियर ऑल (सब साफ़ करें)</button>
 <p class="hint">डाउनलोड के बाद कुछ अपने-आप नहीं हटता, ताकि गलती हो तो सुधारकर दोबारा डाउनलोड कर सकें। नई खबर के लिए "क्लियर ऑल" दबाएँ: इससे फोटो, टेक्स्ट, नाम और कैप्शन हटेंगे, लोगो और सेटिंग बनी रहेंगी। फ़ाइल का नाम खबर के शब्दों से बनता है।</p>
 </div>
@@ -50,7 +52,7 @@ canvas{width:100%;height:auto;border-radius:10px;border:1px solid var(--bd);disp
 <script>
 const W=1080,H=1350,c=document.getElementById('c'),x=c.getContext('2d'),$=i=>document.getElementById(i);
 const FONT='"Anek Devanagari",sans-serif',KH='"Khand","Anek Devanagari",sans-serif',RED='#e11d1d',BLK='#111',MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const DEF={f:FONT,w:'800'};let FF=DEF;
+let FF={f:FONT,w:'700'};function def(){return {f:FONT,w:$('fw').value}}
 const BG={grad:['#f6e6d0','#fdf7ee','#fff'],plain:['#fdf6dc'],band:['#fdf6dc'],pink:['#fbdde7','#fff5f8'],blue:['#d6e8fa','#f6fbff'],green:['#d9f1df','#f6fcf7'],saffron:['#ffdcb0','#fff7ec'],lav:['#e6dcf7','#faf7ff'],white:['#fff']};
 let imgs={f1:null,f2:null,fl:null};
 const frame=new Image();frame.crossOrigin='anonymous';
@@ -60,8 +62,8 @@ $('dt').value=today();
 function load(file,key){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{imgs[key]=im;draw()};im.src=r.result;
  if(key==='fl'){try{localStorage.setItem('pm_logo',r.result)}catch(e){}}};r.readAsDataURL(file)}
 ['f1','f2','fl'].forEach(k=>$(k).addEventListener('change',e=>{if(e.target.files[0])load(e.target.files[0],k)}));
-['txt','name','lp','bg','ts','zs','xs','ys','qt','big','cap','dt'].forEach(i=>$(i).addEventListener('input',draw));
-$('st').addEventListener('input',()=>{$('oldf').style.display=['old','bar'].includes($('st').value)?'grid':'none';draw()});
+['txt','name','lp','bg','ts','zs','xs','ys','qt','big','cap','dt','fw'].forEach(i=>$(i).addEventListener('input',draw));
+$('st').addEventListener('input',()=>{$('oldf').style.display=['old','bar'].includes($('st').value)?'grid':'none';$('chint').style.display=$('st').value==='circ'?'block':'none';draw()});
 try{const s=localStorage.getItem('pm_logo');if(s){const im=new Image();im.onload=()=>{imgs.fl=im;draw()};im.src=s}}catch(e){}
 $('red').onclick=()=>{const t=document.activeElement&&document.activeElement.id==='cap'?$('cap'):($('st').value==='old'&&window._lastCap?$('cap'):$('txt')),a=t.selectionStart,b=t.selectionEnd;if(a===b)return;const v=t.value,s=v.slice(a,b);
  t.value=(s.startsWith('*')&&s.endsWith('*')&&s.length>1)?v.slice(0,a)+s.slice(1,-1)+v.slice(b):v.slice(0,a)+'*'+s+'*'+v.slice(b);draw()};
@@ -82,26 +84,26 @@ function cover(im,ax,ay,aw,ah,dx){const s=Math.max(aw/im.width,ah/im.height)*($(
  x.save();x.beginPath();x.rect(ax,ay,aw,ah);x.clip();x.drawImage(im,ax+(aw-w)/2+dx,ay+(ah-h)/2,w,h);x.restore()}
 // ---------- क्लासिक: आपका फ्रेम ----------
 function drawOld(){
- x.clearRect(0,0,W,H);x.fillStyle='#222';x.fillRect(0,0,W,H);
+ x.clearRect(0,0,W,H);
  const A=gi('f1'),B=gi('f2'),dx=+$('xs').value,im=A||B;
  if(A&&B){cover(A,0,0,W/2-3,H,dx/2);cover(B,W/2+3,0,W/2-3,H,dx/2)}
  else if(im){x.save();x.filter='blur(28px)';cover(im,-40,-40,W+80,H+80,0);x.restore();x.fillStyle='rgba(0,0,0,.45)';x.fillRect(0,0,W,H);
   const s=W/im.width*($('zs').value/100),w=im.width*s,h=im.height*s;x.drawImage(im,(W-w)/2+dx,H*.45-h/2+(+$('ys').value)/100*H,w,h)}
  if(frame.complete&&frame.naturalWidth)x.drawImage(frame,0,0,W,H);
  // हेडिंग
- const hw=parse($('txt').value);FF={f:KH,w:'700'};
+ const hw=parse($('txt').value);FF={f:KH,w:$('fw').value==='600'?'600':'700'};
  let hs=95,hr={L:[]};for(;hs>=40;hs-=2){hr=layout(hw,hs,W-100);if(hr.L.length*hs*1.05<=148)break}
  x.save();x.shadowColor='rgba(0,0,0,.95)';x.shadowBlur=12;x.shadowOffsetY=4;
  lines(hr,hs,(152-hr.L.length*hs*1.05)/2,hs*1.05,'#FFD600','#fff');x.restore();
  // तारीख़
- const dt=$('dt').value.trim();if(dt){FF=DEF;x.font='800 20px '+FONT;const w=x.measureText(dt).width+28,px=W-40-w;
+ const dt=$('dt').value.trim();if(dt){FF=def();x.font='800 20px '+FONT;const w=x.measureText(dt).width+28,px=W-40-w;
   x.fillStyle='rgba(0,0,0,.75)';x.fillRect(px,155,w,38);x.fillStyle='#FFD600';x.fillRect(px,155,4,38);
   x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';x.fillText(dt,px+w/2+1,175)}
  // कैप्शन
- const cw=parse($('cap').value);FF={f:FONT,w:'700'};
+ const cw=parse($('cap').value);FF=def();
  if(cw.some(o=>!o.br)){let cs=56,cr={L:[]};for(;cs>=34;cs-=2){cr=layout(cw,cs,W-120);if(cr.L.length*cs*1.25<=205)break}
   lines(cr,cs,1090+(205-cr.L.length*cs*1.25)/2,cs*1.25,'#c70100','#000')}
- FF=DEF}
+ FF=def()}
 // ---------- कैप्शन कार्ड: रंगीन पट्टी + सोशल आइकन ----------
 function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
 function icons(a,cy,s){const gap=12;let px=a;
@@ -117,7 +119,7 @@ function icons(a,cy,s){const gap=12;let px=a;
  x.save();const k=s*.5/22;x.translate(px+s/2-12*k,cy-11*k);x.scale(k,k);x.fillStyle='#fff';x.fill(new Path2D('M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z'));x.restore();
  x.textAlign='left'}
 function drawBar(){
- x.clearRect(0,0,W,H);x.fillStyle='#fff';x.fillRect(0,0,W,H);
+ x.clearRect(0,0,W,H);
  const hw=parse($('txt').value),cw=parse($('cap').value),YEL='#ffd93b',
  ACC={grad:['#8b0f1c','#c0141f'],plain:['#8b0f1c','#c0141f'],band:['#8b0f1c','#c0141f'],white:['#8b0f1c','#c0141f'],pink:['#a3124f','#d6246e'],blue:['#0b2e63','#1553a8'],green:['#0c5a2b','#16873f'],saffron:['#b34700','#e8700a'],lav:['#4a1d8c','#7a3fd0']},
  AC=ACC[$('bg').value]||ACC.grad,MAR=AC[0];
@@ -125,7 +127,7 @@ function drawBar(){
  const hl=hs*1.28,barH=Math.max(hr.L.length*hl+80,150);
  let cs=46,cr={L:[],sp:0};for(;cs>=28;cs-=2){cr=layout(cw,cs,W-110);if(cr.L.length<=4)break}
  const cl=cs*1.4,capH=cw.some(o=>!o.br)?cr.L.length*cl+60:0,footH=76,pb=H-capH-footH;
- x.fillStyle='#e9e4da';x.fillRect(0,barH,W,pb-barH);
+ if(gi('f1')||gi('f2')){x.fillStyle='#e9e4da';x.fillRect(0,barH,W,pb-barH)}
  const A=gi('f1'),B=gi('f2'),dx=+$('xs').value;
  if(A&&B){cover(A,0,barH,W/2-3,pb-barH,dx/2);cover(B,W/2+3,barH,W/2-3,pb-barH,dx/2)}else if(A||B)cover(A||B,0,barH,W,pb-barH,dx);
  const g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,MAR);g.addColorStop(1,AC[1]);x.fillStyle=g;x.fillRect(0,0,W,barH);
@@ -141,11 +143,51 @@ function drawBar(){
  x.fillStyle=MAR;x.fillRect(0,H-footH,W,footH);x.font='800 34px '+FONT;x.textBaseline='middle';x.textAlign='left';
  const t1='FOLLOW & SHARE: ',t2='@PRAVINNEWS',w1=x.measureText(t1).width,w2=x.measureText(t2).width,IS=44,IW=4*IS+3*12,sx=(W-w1-w2-IW-26)/2;
  x.fillStyle='#fff';x.fillText(t1,sx,H-footH/2);x.fillStyle=YEL;x.fillText(t2,sx+w1,H-footH/2);icons(sx+w1+w2+26,H-footH/2,IS)}
+// ---------- गोल कार्ड ----------
+function drawCirc(){
+ x.clearRect(0,0,W,H);
+ const TH={grad:['#7a0a0a','#c0141f'],plain:['#7a0a0a','#c0141f'],band:['#7a0a0a','#c0141f'],white:['#7a0a0a','#c0141f'],pink:['#6e0d35','#d6246e'],blue:['#0a2250','#1553a8'],green:['#073d1d','#16873f'],saffron:['#6b2a00','#e8700a'],lav:['#2f1060','#7a3fd0']},
+ AC=TH[$('bg').value]||TH.grad,name=$('name').value.trim(),dx=+$('xs').value,z=$('zs').value/100,A=gi('f1'),B=gi('f2');
+ x.fillStyle=AC[0];x.fillRect(0,0,W,H);
+ const rg=x.createRadialGradient(W,0,0,W,0,950);rg.addColorStop(0,'rgba(255,255,255,.10)');rg.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=rg;x.fillRect(0,0,W,H);
+ const lg2=x.createLinearGradient(0,0,0,H);lg2.addColorStop(0,'rgba(0,0,0,0)');lg2.addColorStop(1,'rgba(0,0,0,.28)');x.fillStyle=lg2;x.fillRect(0,0,W,H);
+ for(let i=0;i<18;i++)for(let j=0;j<18;j++){const px=14+i*34,py=14+j*34,r=12*(1-Math.hypot(px,py)/640);if(r>1){x.fillStyle='rgba(255,150,60,.38)';x.beginPath();x.arc(px,py,r,0,7);x.fill()}}
+ x.strokeStyle='rgba(255,255,255,.08)';x.lineWidth=2;[[0,.55,.30,1],[0,.66,.5,1],[0,.78,.7,1],[.15,.58,0,.95],[1,.62,.66,1],[1,.74,.8,1]].forEach(l=>{x.beginPath();x.moveTo(W*l[0],H*l[1]);x.lineTo(W*l[2],H*l[3]);x.stroke()});
+ const cx=W/2,cy=712,R=520;
+ x.save();x.shadowColor='rgba(0,0,0,.4)';x.shadowBlur=26;x.shadowOffsetY=6;x.fillStyle='#fff';x.beginPath();x.arc(cx,cy,R,0,7);x.fill();x.restore();
+ x.strokeStyle=AC[1];x.lineWidth=8;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();
+ if(B){const bx=cx+8,by=190,br=140;x.fillStyle=AC[1];x.beginPath();x.arc(bx,by,br+9,0,7);x.fill();
+  x.save();x.beginPath();x.arc(bx,by,br,0,7);x.clip();const s=Math.max(2*br/B.width,2*br/B.height),w=B.width*s,h=B.height*s;x.drawImage(B,bx-w/2,by-h/2,w,h);x.restore()}
+ const words=parse($('txt').value),real=words.filter(o=>!o.br);
+ if(name&&$('qt').checked&&real.length){real[0].w='“'+real[0].w;real[real.length-1].w+='”'}
+ let sz=78,res={L:[],sp:0};for(;sz>=40;sz-=2){res=layout(words,sz,820);if(res.L.length<=5&&res.L.length*sz*1.28<=430)break}
+ const t0=B?350:270,lh=sz*1.28;
+ lines(res,sz,t0+((760-t0)-res.L.length*lh)/2,lh,AC[1],'#111');
+ if(A){const s=Math.min((H-740)/A.height,720/A.width)*z,w=A.width*s,h=A.height*s;x.drawImage(A,-w*.04+dx,H-h,w,h)}
+ if(name){const i=name.indexOf(','),nm=i>0?name.slice(0,i).trim():name,ds=i>0?name.slice(i+1).trim():'';
+  let ns=56;x.font='800 '+ns+'px '+FONT;while(x.measureText(nm).width>470&&ns>30){ns-=2;x.font='800 '+ns+'px '+FONT}
+  x.textAlign='center';x.textBaseline='middle';x.fillStyle=AC[1];x.fillText(nm,745,935);
+  if(ds){x.font='400 34px '+FONT;x.fillStyle='#111';x.fillText(ds,745,992)}}
+ const lg=imgs.fl;x.textAlign='left';
+ if(lg){const s=Math.min(120/lg.height,330/lg.width),w=lg.width*s,h=lg.height*s;x.drawImage(lg,W-40-w,28,w,h)}
+ else{x.font='800 34px '+FONT;x.fillStyle='#fff';x.textAlign='right';x.textBaseline='middle';x.fillText('@PravinNews',W-40,70)}
+ x.font='800 22px '+FONT;x.fillStyle='#fff';x.textAlign='right';x.textBaseline='middle';x.fillText('@PRAVINNEWS',W-28,H-24);x.textAlign='left'}
+// ---------- न्यूज़ सजावट: कोनों में बिंदियाँ और गोल 3D कोना ----------
+const DECO={grad:['#8b0f1c','#d4202c'],plain:['#8b0f1c','#d4202c'],band:['#8b0f1c','#d4202c'],white:['#8b0f1c','#d4202c'],pink:['#a3124f','#d6246e'],blue:['#0b2e63','#1553a8'],green:['#0c5a2b','#16873f'],saffron:['#b34700','#e8700a'],lav:['#4a1d8c','#7a3fd0']};
+function tri(cx,cy,sx,sy,sz,c0,c1,sh){x.save();if(sh){x.shadowColor='rgba(0,0,0,.38)';x.shadowBlur=18;x.shadowOffsetX=4*sx;x.shadowOffsetY=6*sy}
+ const g=x.createLinearGradient(cx,cy,cx+sx*sz,cy+sy*sz);g.addColorStop(0,c0);g.addColorStop(1,c1);x.fillStyle=g;
+ const a0=sx>0?(sy>0?0:Math.PI*1.5):(sy>0?Math.PI/2:Math.PI);x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,sz,a0,a0+Math.PI/2);x.closePath();x.fill();x.restore()}
+function dots(cx,cy,sx,sy,col,a){x.save();x.fillStyle=col;x.globalAlpha=a;
+ for(let i=0;i<14;i++)for(let j=0;j<14;j++){const r=11*(1-Math.hypot(i,j)/15);if(r>1){x.beginPath();x.arc(cx+sx*(18+i*32),cy+sy*(18+j*32),r,0,7);x.fill()}}x.restore()}
+function corners(bg){const D=DECO[bg]||DECO.grad;x.save();
+ dots(W,0,-1,1,D[1],.17);dots(0,H,1,-1,D[1],.17);
+  x.restore()}
 // ---------- नया स्टाइल ----------
 function draw(){
- FF=DEF;
+ FF=def();
  if($('st').value==='old'){drawOld();return}
  if($('st').value==='bar'){drawBar();return}
+ if($('st').value==='circ'){drawCirc();return}
  const name=$('name').value.trim(),bg=$('bg').value,cols=BG[bg];
  x.clearRect(0,0,W,H);
  const g=x.createLinearGradient(0,0,0,H);
@@ -153,17 +195,18 @@ function draw(){
  else if(cols.length===2){g.addColorStop(0,cols[0]);g.addColorStop(.6,cols[1]);g.addColorStop(1,'#fff')}
  else{g.addColorStop(0,cols[0]);g.addColorStop(.45,cols[1]);g.addColorStop(1,cols[2])}
  x.fillStyle=g;x.fillRect(0,0,W,H);
+ corners(bg);FF={f:FONT,w:$('fw').value};
  let words=parse($('txt').value);
  const real=words.filter(o=>!o.br);
  if(name&&$('qt').checked&&real.length){real[0].w='‘'+real[0].w;real[real.length-1].w+='’'}
  const maxSize=104*$('ts').value/100,boxW=W-170,LH=1.3;let size=maxSize,res;
  for(;size>=40;size-=2){res=layout(words,size,boxW);if(res.L.length<=6&&res.L.length*size*LH<=560)break}
  const top=165,lh=size*LH;
- x.textAlign='left';x.textBaseline='middle';x.font='800 '+size+'px '+FONT;
+ x.textAlign='left';x.textBaseline='middle';x.font=$('fw').value+' '+size+'px '+FONT;
  res.L.forEach((ln,i)=>{let px=(W-ln.w)/2;const y=top+i*lh+lh/2;
   ln.a.forEach(o=>{x.fillStyle=o.red?RED:BLK;x.fillText(o.w,px,y);px+=o.ww+res.sp})});
  let bottom=top+res.L.length*lh;
- if(name){x.font='italic 400 40px '+FONT;x.fillStyle='#222';x.textAlign='right';x.fillText('~ '+name,W-85,bottom+40);bottom+=58}else bottom+=14;
+ if(name){x.font='400 44px Kalam,'+FONT;x.fillStyle='#222';x.textAlign='right';x.fillText('~ '+name,W-85,bottom+40);bottom+=58}else bottom+=14;
  if(bg==='band'){const a=bottom+(H-bottom)*.15,b=x.createLinearGradient(0,0,W,0);
   ['#f4b25a','#e86aa6','#a05ad8','#5b7be0','#e86aa6'].forEach((cc,i,r)=>b.addColorStop(i/(r.length-1),cc));
   x.fillStyle=b;x.fillRect(0,a,W,H-a);const v=x.createLinearGradient(0,a,0,a+170);v.addColorStop(0,'#fdf6dc');v.addColorStop(1,'rgba(253,246,220,0)');x.fillStyle=v;x.fillRect(0,a,W,170)}
@@ -181,14 +224,14 @@ function draw(){
 function reset(){imgs.f1=imgs.f2=imgs.f1p=imgs.f2p=null;['f1','f2'].forEach(k=>$(k).value='');$('txt').value='';$('name').value='';$('cap').value='';$('xs').value=0;$('ys').value=0;$('dt').value=today();draw()}
 $('rs').onclick=reset;
 function saveLast(b){const u=URL.createObjectURL(b);$('last').src=u;$('last').style.display='block';$('lh').style.display='block'}
-function fname(){
+function fname(ext){
  const nm=$('name').value.trim(),st=$('st').value,head=$('txt').value,cap=$('cap').value;
  const base=(st==='new'&&nm?nm+' '+head:(head||cap)),all=(nm+' '+head+' '+cap);
  const words=base.replace(/\*/g,' ').replace(/[^\p{L}\p{M}\p{N}\s]/gu,' ').split(/\s+/).filter(Boolean).slice(0,5).join('-').slice(0,60)||'poster';
  const pol=/नेता|मंत्री|सीएम|पीएम|विधायक|सांसद|पार्टी|भाजपा|कांग्रेस|सपा|बसपा|योगी|मोदी|अखिलेश|राहुल|चुनाव|सरकार|विपक्ष|राजनीति/.test(all);
  const d=new Date(),p=n=>String(n).padStart(2,'0'),ts=d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds());
- return 'PravinNews_'+(pol?'Politics_':'')+words+'_'+ts+'.jpg'}
-$('dl').onclick=()=>{const nm=fname();c.toBlob(b=>{saveLast(b);const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nm;document.body.appendChild(a);a.click();a.remove()},'image/jpeg',0.95)};
-Promise.all([document.fonts.load('800 60px "Anek Devanagari"'),document.fonts.load('700 60px "Anek Devanagari"'),document.fonts.load('700 60px Khand','अA'),document.fonts.load('italic 400 40px "Anek Devanagari"')]).then(draw,draw);
+ return 'PravinNews_'+(pol?'Politics_':'')+words+'_'+ts+'.'+(ext||'jpg')}
+$('dl').onclick=()=>{const tr=['old','bar'].includes($('st').value)&&!imgs.f1&&!imgs.f2,nm=fname(tr?'png':'jpg');c.toBlob(b=>{saveLast(b);const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nm;document.body.appendChild(a);a.click();a.remove()},tr?'image/png':'image/jpeg',0.95)};
+Promise.all([document.fonts.load('800 60px "Anek Devanagari"'),document.fonts.load('700 60px "Anek Devanagari"'),document.fonts.load('600 60px "Anek Devanagari"'),document.fonts.load('700 60px Khand','अA'),document.fonts.load('600 60px Khand','अA'),document.fonts.load('400 40px Kalam','अA')]).then(draw,draw);
 draw();
 </script></body></html>
