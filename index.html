@@ -39,7 +39,8 @@ canvas{width:100%;height:auto;border-radius:10px;border:1px solid var(--bd);disp
 <div class="row"><label>लोगो स्थान<select id="lp"><option value="right">ऊपर दाएँ</option><option value="center">ऊपर बीच में</option><option value="left">ऊपर बाएँ</option></select></label>
 <label>बैकग्राउंड (नया स्टाइल)<select id="bg"><option value="grad">क्रीम ग्रेडिएंट</option><option value="band">क्रीम + रंगीन पट्टी</option><option value="plain">सादा क्रीम</option><option value="pink">हल्का गुलाबी</option><option value="blue">हल्का नीला</option><option value="green">हल्का हरा</option><option value="saffron">हल्का केसरिया</option><option value="lav">हल्का बैंगनी</option><option value="white">सफेद</option></select></label></div>
 <div class="row"><label>टेक्स्ट आकार (नया)<input type="range" id="ts" min="70" max="115" value="100"></label><label>फोटो आकार<input type="range" id="zs" min="70" max="130" value="100"></label></div>
-<div class="row"><label>फोटो बाएँ-दाएँ<input type="range" id="xs" min="-300" max="300" value="0"></label><label>फोटो ऊपर-नीचे (क्लासिक)<input type="range" id="ys" min="-100" max="100" value="0"></label></div>
+<div class="row"><label>फोटो बाएँ-दाएँ<input type="range" id="xs" min="-300" max="300" value="0"></label><label>फोटो ऊपर-नीचे (क्लासिक / फुल फोटो)<input type="range" id="ys" min="-100" max="100" value="0"></label></div>
+<label>फोटो का प्रकार (नया स्टाइल; अपलोड पर अपने-आप चुनता है)<select id="pm"><option value="cut">कटआउट/शख़्स वाली फोटो (नीचे बड़ी)</option><option value="full">सामान्य फोटो: चौड़ाई भरकर आधे पेज में</option></select></label>
 <label>टेक्स्ट की मोटाई (सभी स्टाइल)<select id="fw"><option value="600">हल्की</option><option value="700" selected>मध्यम</option><option value="800">भारी</option></select></label>
 <label class="chk"><input type="checkbox" id="qt" checked> नाम होने पर टेक्स्ट पर ‘ ’ लगाएँ</label>
 <button id="dl">⬇ डाउनलोड (JPEG; फोटो-जगह खाली हो तो पारदर्शी PNG)</button>
@@ -59,10 +60,10 @@ const frame=new Image();frame.crossOrigin='anonymous';
 frame.onerror=()=>{frame.onerror=null;frame.src='https://i.postimg.cc/GmkN6q4B/New-Project-(2).png'};frame.onload=()=>draw();frame.src='frame.png';
 function today(){const d=new Date();return d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear()}
 $('dt').value=today();
-function load(file,key){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{imgs[key]=im;draw()};im.src=r.result;
+function load(file,key){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{imgs[key]=im;if(key!=='fl')autoMode(im);draw()};im.src=r.result;
  if(key==='fl'){try{localStorage.setItem('pm_logo',r.result)}catch(e){}}};r.readAsDataURL(file)}
 ['f1','f2','fl'].forEach(k=>$(k).addEventListener('change',e=>{if(e.target.files[0])load(e.target.files[0],k)}));
-['txt','name','lp','bg','ts','zs','xs','ys','qt','big','cap','dt','fw'].forEach(i=>$(i).addEventListener('input',draw));
+['txt','name','lp','bg','ts','zs','xs','ys','qt','big','cap','dt','fw','pm'].forEach(i=>$(i).addEventListener('input',draw));
 $('st').addEventListener('input',()=>{$('oldf').style.display=['old','bar'].includes($('st').value)?'grid':'none';$('chint').style.display=$('st').value==='circ'?'block':'none';draw()});
 try{const s=localStorage.getItem('pm_logo');if(s){const im=new Image();im.onload=()=>{imgs.fl=im;draw()};im.src=s}}catch(e){}
 $('red').onclick=()=>{const t=document.activeElement&&document.activeElement.id==='cap'?$('cap'):($('st').value==='old'&&window._lastCap?$('cap'):$('txt')),a=t.selectionStart,b=t.selectionEnd;if(a===b)return;const v=t.value,s=v.slice(a,b);
@@ -182,6 +183,15 @@ function dots(cx,cy,sx,sy,col,a){x.save();x.fillStyle=col;x.globalAlpha=a;
 function corners(bg){const D=DECO[bg]||DECO.grad;x.save();
  dots(W,0,-1,1,D[1],.17);dots(0,H,1,-1,D[1],.17);
   x.restore()}
+// ---------- सामान्य (आयताकार) फोटो: आधे पेज में चौड़ाई भरकर ----------
+function autoMode(im){try{const t=document.createElement('canvas');t.width=t.height=24;const q=t.getContext('2d',{willReadFrequently:true});q.drawImage(im,0,0,24,24);
+ const d=q.getImageData(0,0,24,24).data;$('pm').value=[0,23*4,23*24*4,(23*24+23)*4].every(i=>d[i+3]>250)?'full':'cut'}catch(e){}}
+function fullPhoto(A,B,bottom){const top=Math.min(Math.max(bottom+6,H*.46),H*.7),h=H-top,cv=document.createElement('canvas');cv.width=W;cv.height=h;
+ const o=cv.getContext('2d'),z=$('zs').value/100,dx=+$('xs').value,dy=(+$('ys').value)/100*h;
+ const put=(im,ax,aw)=>{const s=Math.max(aw/im.width,h/im.height)*z,w=im.width*s,hh=im.height*s;o.save();o.beginPath();o.rect(ax,0,aw,h);o.clip();o.drawImage(im,ax+(aw-w)/2+dx,(h-hh)/2+dy,w,hh);o.restore()};
+ if(A&&B){put(A,0,W/2-3);put(B,W/2+3,W/2-3)}else put(A||B,0,W);
+ const g=o.createLinearGradient(0,0,0,h*.22);g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(1,'rgba(0,0,0,0)');
+ o.globalCompositeOperation='destination-out';o.fillStyle=g;o.fillRect(0,0,W,h*.22);x.drawImage(cv,0,top)}
 // ---------- नया स्टाइल ----------
 function draw(){
  FF=def();
@@ -211,7 +221,8 @@ function draw(){
   ['#f4b25a','#e86aa6','#a05ad8','#5b7be0','#e86aa6'].forEach((cc,i,r)=>b.addColorStop(i/(r.length-1),cc));
   x.fillStyle=b;x.fillRect(0,a,W,H-a);const v=x.createLinearGradient(0,a,0,a+170);v.addColorStop(0,'#fdf6dc');v.addColorStop(1,'rgba(253,246,220,0)');x.fillStyle=v;x.fillRect(0,a,W,170)}
  const area=H-bottom,z=$('zs').value/100,dx=+$('xs').value,A=gi('f1'),B=gi('f2');
- if(A&&B){const bigIs2=$('big').value==='2',big=bigIs2?B:A,sm=bigIs2?A:B;
+ if($('pm').value==='full'&&(A||B))fullPhoto(A,B,bottom);
+ else if(A&&B){const bigIs2=$('big').value==='2',big=bigIs2?B:A,sm=bigIs2?A:B;
   const sb=Math.min(area/big.height,720/big.width)*z,ss=Math.min(area*.8/sm.height,500/sm.width)*z;
   const wb=big.width*sb,hb=big.height*sb,ws=sm.width*ss,hs=sm.height*ss;
   const bigX=bigIs2?W*.64:W*.36,smX=bigIs2?W*.24:W*.78;
