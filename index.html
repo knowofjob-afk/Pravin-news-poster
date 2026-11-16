@@ -26,7 +26,7 @@ canvas{width:100%;height:auto;border-radius:10px;border:1px solid var(--bd);disp
 <div class="wrap">
 <div class="card">
 <h1>📰 Pravin News - Poster Studio</h1>
-<label>पोस्टर स्टाइल<select id="st"><option value="new">नया: बड़ी फोटो + एक हेडिंग (बयान/न्यूज़)</option><option value="old">क्लासिक: आपका फ्रेम (frame.png)</option><option value="bar">कैप्शन कार्ड: रंगीन पट्टी + सोशल आइकन</option><option value="circ">गोल कार्ड: गहरा बैकग्राउंड + गोल फोटो</option></select></label>
+<label>पोस्टर स्टाइल<select id="st"><option value="new">नया: बड़ी फोटो + एक हेडिंग (बयान/न्यूज़)</option><option value="old">क्लासिक: आपका फ्रेम (frame.png)</option><option value="bar">कैप्शन कार्ड: रंगीन पट्टी + सोशल आइकन</option><option value="circ">गोल कार्ड: गहरा बैकग्राउंड + गोल फोटो</option><option value="text">सिर्फ़ टेक्स्ट: बिना फोटो, गहरा बैकग्राउंड</option></select></label>
 <p class="hint" id="chint" style="display:none">गोल कार्ड: फोटो 1 = नीचे बाईं बड़ी फोटो, फोटो 2 = ऊपर की छोटी गोल फोटो (वैकल्पिक)। नाम बॉक्स में "नाम, पद" लिखें, जैसे: अनंत सिंह, मोकामा विधायक। बैकग्राउंड मेन्यू से रंग-थीम बदलती है।</p>
 <div id="oldf" style="display:none;gap:12px;grid-template-columns:minmax(0,1fr)"><label>नीचे का कैप्शन (लाल शब्द: चुनकर बटन, या *शब्द*)<textarea id="cap" placeholder="खबर का कैप्शन"></textarea></label><label>तारीख़ टैग<input type="text" id="dt"></label><p class="hint">क्लासिक में ऊपर की हेडिंग "टेक्स्ट / हेडिंग" बॉक्स से बनती है। फ्रेम का रंग, आइकन और @PravinNews फ्रेम की PNG से आते हैं।</p></div>
 <label>टेक्स्ट / हेडिंग (Enter = नई लाइन)<textarea id="txt" placeholder="यहाँ हेडिंग/बयान पेस्ट करें"></textarea></label>
@@ -64,7 +64,7 @@ function load(file,key){const r=new FileReader();r.onload=()=>{const im=new Imag
  if(key==='fl'){try{localStorage.setItem('pm_logo',r.result)}catch(e){}}};r.readAsDataURL(file)}
 ['f1','f2','fl'].forEach(k=>$(k).addEventListener('change',e=>{if(e.target.files[0])load(e.target.files[0],k)}));
 ['txt','name','lp','bg','ts','zs','xs','ys','qt','big','cap','dt','fw','pm'].forEach(i=>$(i).addEventListener('input',draw));
-$('st').addEventListener('input',()=>{$('oldf').style.display=['old','bar'].includes($('st').value)?'grid':'none';$('chint').style.display=$('st').value==='circ'?'block':'none';draw()});
+$('st').addEventListener('input',()=>{$('oldf').style.display=['old','bar','text'].includes($('st').value)?'grid':'none';$('chint').textContent=HT[$('st').value]||'';$('chint').style.display=HT[$('st').value]?'block':'none';draw()});
 try{const s=localStorage.getItem('pm_logo');if(s){const im=new Image();im.onload=()=>{imgs.fl=im;draw()};im.src=s}}catch(e){}
 $('red').onclick=()=>{const t=document.activeElement&&document.activeElement.id==='cap'?$('cap'):($('st').value==='old'&&window._lastCap?$('cap'):$('txt')),a=t.selectionStart,b=t.selectionEnd;if(a===b)return;const v=t.value,s=v.slice(a,b);
  t.value=(s.startsWith('*')&&s.endsWith('*')&&s.length>1)?v.slice(0,a)+s.slice(1,-1)+v.slice(b):v.slice(0,a)+'*'+s+'*'+v.slice(b);draw()};
@@ -79,8 +79,8 @@ function wrap(words,size,maxW){x.font=FF.w+' '+size+'px '+FF.f;const sp=x.measur
 function layout(words,size,maxW){let r=wrap(words,size,maxW);
  if(!words.some(o=>o.br)&&r.L.length>1){const n=r.L.length;let lo=maxW*.55,hi=maxW;
   for(let i=0;i<8;i++){const m=(lo+hi)/2;wrap(words,size,m).L.length<=n?hi=m:lo=m}r=wrap(words,size,hi)}return r}
-function lines(r,size,top,lh,on,off){x.textAlign='left';x.textBaseline='middle';x.font=FF.w+' '+size+'px '+FF.f;
- r.L.forEach((ln,i)=>{let px=(W-ln.w)/2;const y=top+i*lh+lh/2;ln.a.forEach(o=>{x.fillStyle=o.red?on:off;x.fillText(o.w,px,y);px+=o.ww+r.sp})})}
+function lines(r,size,top,lh,on,off,ax){x.textAlign='left';x.textBaseline='middle';x.font=FF.w+' '+size+'px '+FF.f;
+ r.L.forEach((ln,i)=>{let px=ax===undefined?(W-ln.w)/2:ax;const y=top+i*lh+lh/2;ln.a.forEach(o=>{x.fillStyle=o.red?on:off;x.fillText(o.w,px,y);px+=o.ww+r.sp})})}
 function cover(im,ax,ay,aw,ah,dx){const s=Math.max(aw/im.width,ah/im.height)*($('zs').value/100),w=im.width*s,h=im.height*s;
  x.save();x.beginPath();x.rect(ax,ay,aw,ah);x.clip();x.drawImage(im,ax+(aw-w)/2+dx,ay+(ah-h)/2,w,h);x.restore()}
 // ---------- क्लासिक: आपका फ्रेम ----------
@@ -107,7 +107,7 @@ function drawOld(){
  FF=def()}
 // ---------- कैप्शन कार्ड: रंगीन पट्टी + सोशल आइकन ----------
 function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
-function icons(a,cy,s){const gap=12;let px=a;
+function icons(a,cy,s){const gap=s*.28;let px=a;
  x.fillStyle='#ff0000';rr(px,cy-s*.36,s,s*.72,s*.2);x.fill();x.fillStyle='#fff';x.beginPath();x.moveTo(px+s*.4,cy-s*.15);x.lineTo(px+s*.4,cy+s*.15);x.lineTo(px+s*.67,cy);x.fill();
  px+=s+gap;
  const ig=x.createLinearGradient(px,cy+s/2,px+s,cy-s/2);ig.addColorStop(0,'#fdc830');ig.addColorStop(.5,'#ee2a7b');ig.addColorStop(1,'#6228d7');
@@ -127,7 +127,7 @@ function drawBar(){
  let hs=80,hr={L:[],sp:0};for(;hs>=36;hs-=2){hr=layout(hw,hs,W-100);if(hr.L.length<=4)break}
  const hl=hs*1.28,barH=Math.max(hr.L.length*hl+80,150);
  let cs=46,cr={L:[],sp:0};for(;cs>=28;cs-=2){cr=layout(cw,cs,W-110);if(cr.L.length<=4)break}
- const cl=cs*1.4,capH=cw.some(o=>!o.br)?cr.L.length*cl+60:0,footH=76,pb=H-capH-footH;
+ const cl=cs*1.4,capH=cw.some(o=>!o.br)?cr.L.length*cl+60:0,footH=64,pb=H-capH-footH;
  if(gi('f1')||gi('f2')){x.fillStyle='#e9e4da';x.fillRect(0,barH,W,pb-barH)}
  const A=gi('f1'),B=gi('f2'),dx=+$('xs').value;
  if(A&&B){cover(A,0,barH,W/2-3,pb-barH,dx/2);cover(B,W/2+3,barH,W/2-3,pb-barH,dx/2)}else if(A||B)cover(A||B,0,barH,W,pb-barH,dx);
@@ -141,9 +141,7 @@ function drawBar(){
   if($('bg').value==='band'){const hg=x.createLinearGradient(0,0,W,0);['#ffe2b8','#ffd0e4','#e6d6fb','#cfe0ff'].forEach((c,i,r)=>hg.addColorStop(i/(r.length-1),c));x.fillStyle=hg}
   else{cg.addColorStop(0,cb[0]);cg.addColorStop(1,cb[1]||cb[0]);x.fillStyle=cg}
   x.fillRect(0,pb,W,capH);x.fillStyle=AC[1];x.fillRect(0,pb,W,7);lines(cr,cs,pb+32,cl,AC[1],'#111')}
- x.fillStyle=MAR;x.fillRect(0,H-footH,W,footH);x.font='800 34px '+FONT;x.textBaseline='middle';x.textAlign='left';
- const t1='FOLLOW & SHARE: ',t2='@PRAVINNEWS',w1=x.measureText(t1).width,w2=x.measureText(t2).width,IS=44,IW=4*IS+3*12,sx=(W-w1-w2-IW-26)/2;
- x.fillStyle='#fff';x.fillText(t1,sx,H-footH/2);x.fillStyle=YEL;x.fillText(t2,sx+w1,H-footH/2);icons(sx+w1+w2+26,H-footH/2,IS)}
+ footerBar($('bg').value,footH)}
 // ---------- गोल कार्ड ----------
 function drawCirc(){
  x.clearRect(0,0,W,H);
@@ -164,7 +162,7 @@ function drawCirc(){
  let sz=78,res={L:[],sp:0};for(;sz>=40;sz-=2){res=layout(words,sz,820);if(res.L.length<=5&&res.L.length*sz*1.28<=430)break}
  const t0=B?350:270,lh=sz*1.28;
  lines(res,sz,t0+((760-t0)-res.L.length*lh)/2,lh,AC[1],'#111');
- if(A){const s=Math.min((H-740)/A.height,720/A.width)*z,w=A.width*s,h=A.height*s;x.drawImage(A,-w*.04+dx,H-h,w,h)}
+ if(A){const s=Math.min((H-64-740)/A.height,720/A.width)*z,w=A.width*s,h=A.height*s;x.drawImage(A,-w*.04+dx,H-64-h,w,h)}
  if(name){const i=name.indexOf(','),nm=i>0?name.slice(0,i).trim():name,ds=i>0?name.slice(i+1).trim():'';
   let ns=56;x.font='800 '+ns+'px '+FONT;while(x.measureText(nm).width>470&&ns>30){ns-=2;x.font='800 '+ns+'px '+FONT}
   x.textAlign='center';x.textBaseline='middle';x.fillStyle=AC[1];x.fillText(nm,745,935);
@@ -172,7 +170,7 @@ function drawCirc(){
  const lg=imgs.fl;x.textAlign='left';
  if(lg){const s=Math.min(120/lg.height,330/lg.width),w=lg.width*s,h=lg.height*s;x.drawImage(lg,W-40-w,28,w,h)}
  else{x.font='800 34px '+FONT;x.fillStyle='#fff';x.textAlign='right';x.textBaseline='middle';x.fillText('@PravinNews',W-40,70)}
- x.font='800 22px '+FONT;x.fillStyle='#fff';x.textAlign='right';x.textBaseline='middle';x.fillText('@PRAVINNEWS',W-28,H-24);x.textAlign='left'}
+ footerBar($('bg').value,64,AC[1],AC[0])}
 // ---------- न्यूज़ सजावट: कोनों में बिंदियाँ और गोल 3D कोना ----------
 const DECO={grad:['#8b0f1c','#d4202c'],plain:['#8b0f1c','#d4202c'],band:['#8b0f1c','#d4202c'],white:['#8b0f1c','#d4202c'],pink:['#a3124f','#d6246e'],blue:['#0b2e63','#1553a8'],green:['#0c5a2b','#16873f'],saffron:['#b34700','#e8700a'],lav:['#4a1d8c','#7a3fd0']};
 function tri(cx,cy,sx,sy,sz,c0,c1,sh){x.save();if(sh){x.shadowColor='rgba(0,0,0,.38)';x.shadowBlur=18;x.shadowOffsetX=4*sx;x.shadowOffsetY=6*sy}
@@ -186,18 +184,44 @@ function corners(bg){const D=DECO[bg]||DECO.grad;x.save();
 // ---------- सामान्य (आयताकार) फोटो: आधे पेज में चौड़ाई भरकर ----------
 function autoMode(im){try{const t=document.createElement('canvas');t.width=t.height=24;const q=t.getContext('2d',{willReadFrequently:true});q.drawImage(im,0,0,24,24);
  const d=q.getImageData(0,0,24,24).data;$('pm').value=[0,23*4,23*24*4,(23*24+23)*4].every(i=>d[i+3]>250)?'full':'cut'}catch(e){}}
-function fullPhoto(A,B,bottom){const top=Math.min(Math.max(bottom+6,H*.46),H*.7),h=H-top,cv=document.createElement('canvas');cv.width=W;cv.height=h;
+function fullPhoto(A,B,bottom){const top=Math.min(Math.max(bottom+6,H*.46),H*.7),h=H-64-top,cv=document.createElement('canvas');cv.width=W;cv.height=h;
  const o=cv.getContext('2d'),z=$('zs').value/100,dx=+$('xs').value,dy=(+$('ys').value)/100*h;
  const put=(im,ax,aw)=>{const s=Math.max(aw/im.width,h/im.height)*z,w=im.width*s,hh=im.height*s;o.save();o.beginPath();o.rect(ax,0,aw,h);o.clip();o.drawImage(im,ax+(aw-w)/2+dx,(h-hh)/2+dy,w,hh);o.restore()};
  if(A&&B){put(A,0,W/2-3);put(B,W/2+3,W/2-3)}else put(A||B,0,W);
  const g=o.createLinearGradient(0,0,0,h*.22);g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(1,'rgba(0,0,0,0)');
  o.globalCompositeOperation='destination-out';o.fillStyle=g;o.fillRect(0,0,W,h*.22);x.drawImage(cv,0,top)}
+// ---------- सब पोस्टर का फ़ुटर: FOLLOW & SHARE + सोशल आइकन ----------
+const HT={circ:'गोल कार्ड: फोटो 1 = नीचे बाईं बड़ी फोटो, फोटो 2 = ऊपर की छोटी गोल फोटो (वैकल्पिक)। नाम बॉक्स में "नाम, पद" लिखें, जैसे: अनंत सिंह, मोकामा विधायक। बैकग्राउंड मेन्यू से रंग-थीम बदलती है।',text:'सिर्फ़ टेक्स्ट: "टेक्स्ट / हेडिंग" बॉक्स = मुख्य हेडिंग, "कैप्शन" बॉक्स = नीचे का विवरण (वैकल्पिक), नाम बॉक्स = ऊपर का छोटा टैग (वैकल्पिक, जैसे: क्राइम न्यूज़)। फोटो की ज़रूरत नहीं। बैकग्राउंड मेन्यू से रंग-थीम बदलती है।'};
+function footerBar(bg,h,col,line){const D=DECO[bg]||DECO.grad,y=H-h;x.fillStyle=col||D[0];x.fillRect(0,y,W,h);x.fillStyle=line||D[1];x.fillRect(0,y,W,3);
+ const fs=Math.round(h*.43),IS=Math.round(h*.56),gap=IS*.28;x.font='800 '+fs+'px '+FONT;x.textBaseline='middle';x.textAlign='left';
+ const t1='FOLLOW & SHARE: ',t2='@PRAVINNEWS',w1=x.measureText(t1).width,w2=x.measureText(t2).width,IW=4*IS+3*gap,sx=(W-w1-w2-IW-18)/2,cy=y+h/2+1;
+ x.fillStyle='#fff';x.fillText(t1,sx,cy);x.fillStyle='#ffd93b';x.fillText(t2,sx+w1,cy);icons(sx+w1+w2+18,cy,IS)}
+// ---------- सिर्फ़ टेक्स्ट पोस्टर ----------
+function drawText(){
+ x.clearRect(0,0,W,H);
+ const TP={grad:['#0c2e96','#041450','#e4002b'],plain:['#1d1d1f','#060607','#e10600'],band:['#0c2e96','#041450','#e4002b'],white:['#ffffff','#e9eef8','#d7001e'],pink:['#7a0f3d','#3a0720','#ffd100'],blue:['#0c2e96','#041450','#e4002b'],green:['#0c5a2b','#04301a','#ffd100'],saffron:['#b34700','#5a2300','#ffd100'],lav:['#4a1d8c','#22083f','#ffd100']},
+ bg=$('bg').value,P=TP[bg]||TP.grad,light=bg==='white',base=light?'#0b1e4f':'#fff',hi=light?'#d7001e':'#ffd100',bodyC=light?'#26365e':'#eaf0ff',tag=$('name').value.trim();
+ const g=x.createLinearGradient(0,0,W*.6,H);g.addColorStop(0,P[0]);g.addColorStop(1,P[1]);x.fillStyle=g;x.fillRect(0,0,W,H);
+ x.save();x.globalAlpha=light?.05:.06;x.fillStyle=light?'#0b1e4f':'#fff';x.beginPath();x.arc(W*.92,H*.1,W*.45,0,7);x.fill();x.beginPath();x.arc(W*.04,H*.96,W*.36,0,7);x.fill();x.restore();
+ x.save();x.globalAlpha=light?.04:.05;x.strokeStyle=light?'#0b1e4f':'#fff';x.lineWidth=3;for(let i=-H;i<W;i+=40){x.beginPath();x.moveTo(i,H);x.lineTo(i+H,0);x.stroke()}x.restore();
+ x.fillStyle=P[2];x.fillRect(0,0,15,H);
+ if(tag){x.font='800 34px '+FONT;x.textAlign='left';x.textBaseline='middle';const w=x.measureText(tag).width+56;x.fillStyle=P[2];x.fillRect(80,60,w,62);x.fillStyle=light||P[2]==='#ffd100'?(P[2]==='#ffd100'?'#222':'#fff'):'#fff';x.fillText(tag,108,92)}
+ const lg=imgs.fl;if(lg){const s=Math.min(100/lg.height,300/lg.width),w=lg.width*s,h=lg.height*s;x.drawImage(lg,W-50-w,34,w,h)}
+ const hw=parse($('txt').value),bw=parse($('cap').value),hasB=bw.some(o=>!o.br),ay=170,ah=H-64-ay-50;
+ FF=def();let hs=100,hr={L:[]};for(;hs>=40;hs-=2){hr=layout(hw,hs,W-160);if(hr.L.length<=7&&hr.L.length*hs*1.2<=(hasB?ah*.55:ah))break}
+ const hH=hr.L.length*hs*1.2;let bs=54,br={L:[]};
+ if(hasB)for(;bs>=26;bs-=2){br=layout(bw,bs,W-160);if(br.L.length*bs*1.4<=ah-hH-70)break}
+ const bH=hasB?br.L.length*bs*1.4:0,total=hH+(hasB?70+bH:0),y0=ay+Math.max(0,(ah-total)/2);
+ lines(hr,hs,y0,hs*1.2,hi,base,80);
+ if(hasB){x.fillStyle=P[2];x.fillRect(80,y0+hH+28,130,8);lines(br,bs,y0+hH+70,bs*1.4,hi,bodyC,80)}
+ footerBar(bg,64,light?'#0b1e4f':P[1],P[2])}
 // ---------- नया स्टाइल ----------
 function draw(){
  FF=def();
  if($('st').value==='old'){drawOld();return}
  if($('st').value==='bar'){drawBar();return}
  if($('st').value==='circ'){drawCirc();return}
+ if($('st').value==='text'){drawText();return}
  const name=$('name').value.trim(),bg=$('bg').value,cols=BG[bg];
  x.clearRect(0,0,W,H);
  const g=x.createLinearGradient(0,0,0,H);
@@ -220,15 +244,16 @@ function draw(){
  if(bg==='band'){const a=bottom+(H-bottom)*.15,b=x.createLinearGradient(0,0,W,0);
   ['#f4b25a','#e86aa6','#a05ad8','#5b7be0','#e86aa6'].forEach((cc,i,r)=>b.addColorStop(i/(r.length-1),cc));
   x.fillStyle=b;x.fillRect(0,a,W,H-a);const v=x.createLinearGradient(0,a,0,a+170);v.addColorStop(0,'#fdf6dc');v.addColorStop(1,'rgba(253,246,220,0)');x.fillStyle=v;x.fillRect(0,a,W,170)}
- const area=H-bottom,z=$('zs').value/100,dx=+$('xs').value,A=gi('f1'),B=gi('f2');
+ const FH=64,area=H-FH-bottom,z=$('zs').value/100,dx=+$('xs').value,A=gi('f1'),B=gi('f2');
  if($('pm').value==='full'&&(A||B))fullPhoto(A,B,bottom);
  else if(A&&B){const bigIs2=$('big').value==='2',big=bigIs2?B:A,sm=bigIs2?A:B;
   const sb=Math.min(area/big.height,720/big.width)*z,ss=Math.min(area*.8/sm.height,500/sm.width)*z;
   const wb=big.width*sb,hb=big.height*sb,ws=sm.width*ss,hs=sm.height*ss;
   const bigX=bigIs2?W*.64:W*.36,smX=bigIs2?W*.24:W*.78;
-  const put=(i,cx,w,h)=>{let px=cx-w/2+dx;px=Math.max(-w*.1,Math.min(W-w*.9,px));x.drawImage(i,px,H-h,w,h)};
+  const put=(i,cx,w,h)=>{let px=cx-w/2+dx;px=Math.max(-w*.1,Math.min(W-w*.9,px));x.drawImage(i,px,H-FH-h,w,h)};
   if(bigIs2){put(big,bigX,wb,hb);put(sm,smX,ws,hs)}else{put(sm,smX,ws,hs);put(big,bigX,wb,hb)}}
- else if(A||B){const im=A||B,s=Math.min(area/im.height,900/im.width)*z,w=im.width*s,h=im.height*s;x.drawImage(im,(W-w)/2+dx,H-h,w,h)}
+ else if(A||B){const im=A||B,s=Math.min(area/im.height,900/im.width)*z,w=im.width*s,h=im.height*s;x.drawImage(im,(W-w)/2+dx,H-FH-h,w,h)}
+ footerBar(bg,FH);
  const lg=imgs.fl;if(lg){const s=Math.min(110/lg.height,400/lg.width),w=lg.width*s,h=lg.height*s,p=$('lp').value;
   x.drawImage(lg,p==='center'?(W-w)/2:p==='left'?50:W-w-50,34,w,h)}
 }
